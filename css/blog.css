@@ -38,8 +38,13 @@ h3 {
     color: #fff;
 }
 
+.plume-logo {
+    height: 1em;
+}
+
 .blog-title,
-.blog-tagline {
+.blog-tagline,
+.blog-logo {
     margin: 0;
 }
 .blog-title {
@@ -147,8 +152,11 @@ h3 {
     text-align: center;
     padding: 1em 0;
 }
+.footer ul {
+    -webkit-padding-start: 0px;
+}
 .footer a {
-    color: #ccc;
+    color: #777;
     font-size: 80%;
 }
 .footer .pure-menu a:hover,
