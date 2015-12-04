@@ -1,2 +1,3 @@
 # solid-plume
-Solid blogging platform
+
+Plume, a Solid blog platform!
