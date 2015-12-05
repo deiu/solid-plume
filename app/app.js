@@ -154,6 +154,7 @@ var showViewer = function(url) {
     footer.appendChild(buttonList);
     // hide main page
     document.querySelector('.posts').classList.add('hidden');
+    document.querySelector('.viewer').classList.remove('hidden');
 }
 
 var showEditor = function(url) {
@@ -163,6 +164,8 @@ var showEditor = function(url) {
     document.querySelector('.editor').classList.remove('hidden');
     if (url && url.length > 0) {
         var post = posts[url];
+        console.log("URL editor: "+url);
+        console.log(post);
         if (post.title) {
             document.querySelector('.editor-title').innerHTML = post.title;
         }
@@ -183,6 +186,7 @@ var showEditor = function(url) {
         document.querySelector('.editor-author').innerHTML = user.name;
         document.querySelector('.editor-date').innerHTML = moment().format('LL');
         setBodyValue('');
+        window.history.pushState("", "Plume", window.location.pathname+"?new");
     }
 };
 
@@ -190,6 +194,7 @@ var resetAll = function() {
     document.querySelector('.nav').classList.remove('hidden');
     document.querySelector('.editor').classList.add('hidden');
     document.querySelector('.viewer').classList.add('hidden');
+    document.querySelector('.viewer').innerHTML = '';
     document.querySelector('.posts').classList.remove('hidden');
     document.querySelector('.editor-title').innerHTML = '';
     document.querySelector('.editor-author').innerHTML = '';
@@ -208,6 +213,7 @@ var publishPost = function(url) {
     post.body = getBodyValue();
     post.tags = [];
     posts[post.url] = post;
+    console.log(post);
     // create post dom element
     var article = addPost(post);
     // select element holding all the posts
@@ -335,7 +341,7 @@ var addPost = function(post) {
     // create title
     var title = document.createElement('h2');
     title.classList.add('post-title');
-    title.innerHTML = (post.title)?'<a href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
+    title.innerHTML = (post.title)?'<a href="#" onclick="showViewer(\''+post.url+'\')">'+post.title+'</a>':'';
     // append title to header
     header.appendChild(title);
 
