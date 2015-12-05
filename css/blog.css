@@ -82,6 +82,7 @@ h3 {
 
 /* EDITOR */
 .editor {
+    padding-top: 1em;
     color: #444;
 }
 .editor-title {
@@ -153,6 +154,7 @@ span.editor-title:empty:focus::before {
 }
 .nav-item a:hover,
 .nav-item a:focus {
+    color: inherit;
     border: 2px solid rgb(61, 146, 201);
     text-decoration: none;
 }
@@ -161,6 +163,7 @@ span.editor-title:empty:focus::before {
     display: inline-block;
 }
 .nav-item span {
+    color: inherit;
     display: inline-block;
     position: relative;
     top: 20%;
@@ -199,13 +202,15 @@ span.editor-title:empty:focus::before {
 }
 
 .post-title a,a:hover,a:visited {
-    color: inherit;
+    color: #333;
     text-decoration: none;
 }
-.post-title:hover {
-    box-shadow: inset 0 0px 0 white, inset 0 -1px 0;
+.post-title a:hover {
+    box-shadow: inset 0 0px 0 white, inset 0 -1px 0 #333;
 }
-
+.post-author:hover, .post-author:visited {
+    color: rgb(61, 146, 201);
+}
 .post-avatar {
     border-radius: 50px;
     float: right;
@@ -246,6 +251,14 @@ span.editor-title:empty:focus::before {
     margin-left: 1em;
     color: #fff;
     text-shadow: 0 1px 1px #333;
+}
+
+.fade-out {
+    background-color: #eee;
+    transition: background-color 1.5s linear;
+    -moz-transition: background-color 1.5s linear;
+    -webkit-transition: background-color 1.5s linear;
+    -ms-transition: background-color 1.5s linear;
 }
 
 pre {

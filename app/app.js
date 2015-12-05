@@ -77,25 +77,27 @@ var queryVals = (function(a) {
 })(window.location.search.substr(1).split('&'));
 
 
-var defaults = {
+var user = {
         title: "/dev/solid",
         tagline: "Rocking the Solid Web",
         picture: "https://deiu.me/avatar.jpg",
-        owner: "Andrei Sambra",
+        name: "Andrei Sambra",
         webid: "https://deiu.me/profile#me",
         avatar: "https://deiu.me/avatar.jpg"
 };
 
 var init = function() {
-    document.querySelector('.blog-picture').src = defaults.picture;
-    document.querySelector('.blog-title').innerHTML = defaults.title;
-    document.querySelector('.blog-tagline').innerHTML = defaults.tagline;
+    document.querySelector('.blog-picture').src = user.picture;
+    document.querySelector('.blog-title').innerHTML = user.title;
+    document.querySelector('.blog-tagline').innerHTML = user.tagline;
 
     // select element holding all the posts
     var postsdiv = document.querySelector('.posts');
 
     if (queryVals['view'] && queryVals['view'].length > 0) {
         var url = decodeURIComponent(queryVals['view']);
+        console.log("Viewing "+url);
+        console.log(posts[url]);
         var article = addPost(posts[url]);
         postsdiv.appendChild(article);
         var back = document.createElement('div');
@@ -165,8 +167,9 @@ var showEditor = function(url) {
         }
     } else {
         document.querySelector('.editor-title').focus();
-        document.querySelector('.editor-author').innerHTML = defaults.owner;
+        document.querySelector('.editor-author').innerHTML = user.name;
         document.querySelector('.editor-date').innerHTML = moment().format('LL');
+        setBodyValue('');
     }
 };
 
@@ -178,11 +181,35 @@ var cancelPublish = function() {
     document.querySelector('.editor-author').innerHTML = '';
     document.querySelector('.editor-date').innerHTML = '';
     document.querySelector('.editor-body').innerHTML = '';
-    goBack();
 };
 
 var publish = function() {
-    console.log(getBodyValue());
+    var post = {};
+    post.url = user.webid+document.querySelector('.editor-title').innerHTML;
+    post.title = document.querySelector('.editor-title').innerHTML;
+    post.author = user.webid;
+    post.date = document.querySelector('.editor-date').innerHTML;
+    post.body = getBodyValue();
+    post.tags = [];
+    posts[post.url] = post;
+    console.log(posts);
+    // create post dom element
+    var article = addPost(post);
+    // select element holding all the posts
+    var postsdiv = document.querySelector('.posts');
+    if (postsdiv.hasChildNodes()) {
+        var first = postsdiv.childNodes[0];
+        postsdiv.insertBefore(article, first);
+    } else {
+        postsdiv.appendChild(article);
+    }
+    // fade out to indicate new content
+    article.scrollIntoView(true);
+    article.classList.add("fade-out");
+    setTimeout(function() {
+        article.style.background = "transparent";
+    }, 500);
+    cancelPublish();
 };
 
 var posts = {
