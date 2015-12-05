@@ -138,7 +138,7 @@ var showViewer = function(url) {
         // edit button
         var edit = document.createElement('button');
         edit.classList.add("button");
-        edit.setAttribute('onclick', 'showEditor("'+url+'")');
+        edit.setAttribute('onclick', 'showEditor(\''+url+'\')');
         edit.innerHTML = 'Edit';
         buttonList.appendChild(edit);
         // delete button
@@ -146,7 +146,7 @@ var showViewer = function(url) {
         del.classList.add('button');
         del.classList.add('danger');
         del.classList.add('float-right');
-        del.setAttribute('onclick', 'deletePost("'+url+'")');
+        del.setAttribute('onclick', 'deletePost(\''+url+'\')');
         del.innerHTML = 'Delete';
         buttonList.appendChild(del);
     }
@@ -180,7 +180,7 @@ var showEditor = function(url) {
             setBodyValue(post.body);
         }
         document.querySelector('.publish').innerHTML = "Update";
-        document.querySelector('.publish').setAttribute('onclick', 'publishPost("'+url+'")');
+        document.querySelector('.publish').setAttribute('onclick', 'publishPost(\''+url+'\')');
     } else {
         document.querySelector('.editor-title').focus();
         document.querySelector('.editor-author').innerHTML = user.name;
@@ -403,6 +403,28 @@ var addPost = function(post) {
     body.innerHTML = parseMD(post.body);
     // append body to article
     article.appendChild(body);
+
+    // add footer with action links
+    var footer = document.createElement('footer');
+    if (user.webid == post.author) {
+        // edit button
+        var edit = document.createElement('a');
+        edit.classList.add("action-button");
+        edit.setAttribute('onclick', 'showEditor(\''+post.url+'\')');
+        edit.setAttribute('title', 'Edit post');
+        edit.innerHTML = '<img src="img/logo.svg" alt="Edit post"> Edit';
+        footer.appendChild(edit);
+        // delete button
+        var del = document.createElement('a');
+        del.classList.add('action-button');
+        del.classList.add('danger-text');
+        del.setAttribute('onclick', 'deletePost(\''+post.url+'\')');
+        del.innerHTML = 'Delete';
+        footer.appendChild(del);
+    }
+
+    // append footer to post
+    article.appendChild(footer);
 
     // append article to list of posts
     return article;

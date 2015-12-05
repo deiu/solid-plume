@@ -169,12 +169,34 @@ a.editor-author, a.editor-author:visited {
 .danger {
     background: #CA3C3C!important;
 }
+.danger-text {
+    color: #CA3C3C!important;
+}
 .button:hover {
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 .clickable {
     cursor: pointer;
+}
+
+.action-button {
+    background-color: #fff;
+    color: #777;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 50%;
+    padding: .5em 1em;
+    text-decoration: none;
+    border: 1px solid #777;
+    border-radius: 2px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+.action-button img {
+    position: relative;
+    height: 15px;
+    top: 5px;
 }
 
 /* NAV */
