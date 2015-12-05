@@ -91,34 +91,22 @@ var init = function() {
     document.querySelector('.blog-title').innerHTML = user.title;
     document.querySelector('.blog-tagline').innerHTML = user.tagline;
 
-    // select element holding all the posts
-    var postsdiv = document.querySelector('.posts');
-
     if (queryVals['view'] && queryVals['view'].length > 0) {
         var url = decodeURIComponent(queryVals['view']);
-        console.log("Viewing "+url);
-        console.log(posts[url]);
-        var article = addPost(posts[url]);
-        postsdiv.appendChild(article);
-        var back = document.createElement('div');
-        back.classList.add("inline-block");
-        back.innerHTML = '<a class="dark underline" href="" onclick="goBack()">≪ Go back</a>';
-        postsdiv.appendChild(back);
-        var edit = document.createElement('div');
-        edit.classList.add("inline-block");
-        edit.innerHTML = '&nbsp;| <a class="dark underline" href="?edit='+encodeURIComponent(url)+'">Edit</a>';
-        postsdiv.appendChild(edit);
+        showViewer(url);
     } else if (queryVals['edit'] && queryVals['edit'].length > 0) {
         var url = decodeURIComponent(queryVals['edit']);
         showEditor(url);
     } else if (queryVals['new'] !== undefined) {
         showEditor();
-    } else {
-        // add all posts to viewer
-        for (var i in posts) {
-            var article = addPost(posts[i]);
-            postsdiv.appendChild(article);
-        }
+    }
+    // select element holding all the posts
+    var postsdiv = document.querySelector('.posts');
+
+    // add all posts to viewer
+    for (var i in posts) {
+        var article = addPost(posts[i]);
+        postsdiv.appendChild(article);
     }
 
     var header = document.querySelector('.header');
@@ -142,8 +130,21 @@ var init = function() {
     window.addEventListener('scroll', stickyScroll, false);
 };
 
-function goBack() {
-    window.history.back();
+var showViewer = function(url) {
+    var viewer = document.querySelector('.viewer');
+    var article = addPost(posts[url]);
+    viewer.appendChild(article);
+    var back = document.createElement('div');
+    back.classList.add("inline-block");
+    back.innerHTML = '<button class="dark underline" onclick="resetAll()">≪ Go back</button>';
+    viewer.appendChild(back);
+    var edit = document.createElement('div');
+    edit.classList.add("inline-block");
+    edit.innerHTML = '&nbsp;| <a class="dark underline" href="?edit='+encodeURIComponent(url)+'">Edit</a>';
+    // append to viewer
+    viewer.appendChild(edit);
+    // hide main page
+    document.querySelector('.posts').classList.add('hidden');
 }
 
 var showEditor = function(url) {
@@ -173,14 +174,17 @@ var showEditor = function(url) {
     }
 };
 
-var cancelPublish = function() {
+var resetAll = function() {
     document.querySelector('.nav').classList.remove('hidden');
     document.querySelector('.editor').classList.add('hidden');
+    document.querySelector('.viewer').classList.add('hidden');
     document.querySelector('.posts').classList.remove('hidden');
     document.querySelector('.editor-title').innerHTML = '';
     document.querySelector('.editor-author').innerHTML = '';
     document.querySelector('.editor-date').innerHTML = '';
     document.querySelector('.editor-body').innerHTML = '';
+    // window.location.search = '';
+    window.history.pushState("", "Plume", window.location.pathname);
 };
 
 var publish = function() {
@@ -209,7 +213,7 @@ var publish = function() {
     setTimeout(function() {
         article.style.background = "transparent";
     }, 500);
-    cancelPublish();
+    resetAll();
 };
 
 var posts = {

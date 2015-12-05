@@ -146,7 +146,7 @@ span.editor-title:empty:focus::before {
 }
 .nav-item a {
     background: transparent;
-    border: 2px solid rgb(176, 202, 219);
+    border: 2px solid #fff;
     color: #fff;
     letter-spacing: 0.05em;
     text-transform: uppercase;
