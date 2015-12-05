@@ -26,7 +26,7 @@ html {
 
 a {
     text-decoration: none;
-    color: rgb(61, 146, 201);
+    color: #3D92C9;
 }
 a:hover,
 a:focus {
@@ -108,6 +108,9 @@ span.editor-title:empty:focus::before {
     content: 'Title';
     color: #777;
 }
+a.editor-author, a.editor-author:visited {
+    color: #3D92C9;
+}
 
 .editor-body {
     margin-bottom: 1em;
@@ -124,6 +127,26 @@ span.editor-title:empty:focus::before {
 }
 .button-xsmall {
     font-size: 50%;
+}
+.button {
+    display: inline-block;
+    padding: 25px 10px 25px 10px;
+    background: #42B8DD;
+    border-radius: 4px;
+    font-weight: normal;
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: 1px;
+    line-height: 1px;
+    text-transform: uppercase;
+    border: 0;
+}
+.button-success {
+    background: #1CB841;
+    color: #fff;
+}
+.button:hover {
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 /* NAV */

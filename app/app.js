@@ -25,31 +25,17 @@
 //     autoLink: true
 // });
 
-var editor = new Editor({
-  element: document.querySelector('.editor-body'),
-  status: false,
-  toolbar: [
-      {name: 'bold', action: Editor.toggleBold},
-      {name: 'italic', action: Editor.toggleItalic},
-      {name: 'code', action: Editor.toggleCodeBlock},
-      '|',
-
-      {name: 'quote', action: Editor.toggleBlockquote},
-      {name: 'unordered-list', action: Editor.toggleUnOrderedList},
-      {name: 'ordered-list', action: Editor.toggleOrderedList},
-      '|',
-
-      {name: 'link', action: Editor.drawLink},
-      {name: 'image', action: Editor.drawImage},
-      '|',
-
-      // {name: 'info', action: 'http://lab.lepture.com/editor/markdown'},
-      {name: 'preview', action: Editor.togglePreview},
-      {name: 'fullscreen', action: Editor.toggleFullScreen}
-    ]
+var editor = new SimpleMDE({
+    status: false,
+    spellChecker: false
 });
-// load the markdown parse function
-var parse = editor.constructor.markdown;
+var parseMD = function(data) {
+    if (data) {
+        return editor.markdown(data);
+    }
+    return '';
+};
+
 // sanitize value from form
 var getBodyValue = function() {
     var val = editor.codemirror.getValue();
@@ -371,7 +357,7 @@ var addPost = function(post) {
     // create body
     var body = document.createElement('section');
     body.classList.add('post-body');
-    body.innerHTML = parse(post.body);
+    body.innerHTML = parseMD(post.body);
     // append body to article
     article.appendChild(body);
 

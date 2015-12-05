@@ -7,8 +7,8 @@
     <title>Plume</title>
     <link rel="stylesheet" href="css/pure-min.css">
     <link rel="stylesheet" href="css/grids-responsive-min.css">
-    <link rel="stylesheet" href="css/editor.css">
-    <!-- <link rel="stylesheet" href="css/medium-theme.min.css"> -->
+    <!-- <link rel="stylesheet" href="css/editor.css"> -->
+    <link rel="stylesheet" href="css/simplemde.min.css">
     <link rel="stylesheet" href="css/blog.css">
     <link rel="shortcut icon" type="img/png" href="favicon.png">
 </head>
@@ -45,8 +45,8 @@
                     </section>
                     <footer>
                         <h1 class="content-subhead"></h1>
-                        <button class="button-xlarge pure-button" onclick="publish()">Publish</button>
-                        <button class="button-xlarge pure-button" onclick="resetAll()">Cancel</button>
+                        <button class="button-xlarge button button-success" onclick="publish()">Publish</button>
+                        <button class="button-xlarge button" onclick="resetAll()">Cancel</button>
                     </footer>
                 </div>
 
@@ -68,8 +68,8 @@
     </div>
 
 <!-- Local Javascript -->
-<script src="js/editor.js"></script>
-<script src="js/marked.js"></script>
+<script src="js/simplemde.min.js"></script>
+<!-- <script src="js/marked.js"></script> -->
 <script src="js/moment.min.js"></script>
 <script src="app/app.js"></script>
 </body>
