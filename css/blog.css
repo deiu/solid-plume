@@ -37,6 +37,26 @@ h3 {
     font-weight: 100;
 }
 
+/* NOTIFICATIONS */
+.note {
+    position: absolute;
+    z-index: 101;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #eee;
+    color: #fff;
+    text-align: center;
+    font-size: 1.5em;
+    font-weight: 200;
+    line-height: 2em;
+    overflow-y: hidden;
+    -webkit-box-shadow: 0 0 5px black;
+    -moz-box-shadow:    0 0 5px black;
+    box-shadow:         0 0 5px black;
+    transition: opacity 2s linear;
+}
+
 /* LAYOUT CSS */
 .pure-img-responsive {
     max-width: 100%;
@@ -50,7 +70,7 @@ h3 {
 .header {
     text-align: center;
     top: auto;
-    margin: 1em auto 2em auto;
+    margin: 1em auto 0 auto;
     /*height: 300px;*/
 }
 
@@ -122,15 +142,17 @@ a.editor-author, a.editor-author:visited {
     color: #777;
 }
 
-.button-xlarge {
-    font-size: 125%;
+.small {
+    font-size: 50%;
 }
+
 .button-xsmall {
     font-size: 50%;
 }
 .button {
     display: inline-block;
     padding: 25px 10px 25px 10px;
+    margin-right: 10px;
     background: #42B8DD;
     border-radius: 4px;
     font-weight: normal;
@@ -141,12 +163,18 @@ a.editor-author, a.editor-author:visited {
     text-transform: uppercase;
     border: 0;
 }
-.button-success {
-    background: #1CB841;
-    color: #fff;
+.success {
+    background: #1CB841!important;
+}
+.danger {
+    background: #CA3C3C!important;
 }
 .button:hover {
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.clickable {
+    cursor: pointer;
 }
 
 /* NAV */
@@ -331,17 +359,17 @@ pre {
     height: 1em;
 }
 
+.float-right {
+    float: right;
+}
+
+.float-left {
+    float: left;
+}
+
 .underline:hover {
     text-decoration: underline;
 }
-
-/* override */
-.CodeMirror {
-    border: 1px dotted #ccc;
-}
-/*.CodeMirror-cursor {
-    visibility: visible!important;
-}*/
 
 @media (min-width: 48em) {
     .content {

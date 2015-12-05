@@ -17,14 +17,16 @@
     <div id="layout" class="pure-g">
         <div class="sidebar pure-u-1 pure-u-md-1-4">
             <div class="header">
-                <img class="blog-picture" src="https://deiu.me/avatar.jpg">
-                <h1 class="blog-title">Blog Title</h1>
-                <h2 class="blog-tagline">Plume, a Solid blog platform</h2>
-                <div class="spacer"></div>
+                <div class="clickable" onclick="resetAll()">
+                    <img class="blog-picture" src="https://deiu.me/avatar.jpg">
+                    <h1 class="blog-title">Blog Title</h1>
+                    <h2 class="blog-tagline">Plume, a Solid blog platform</h2>
+                    <div class="spacer"></div>
+                </div>
                 <nav class="nav">
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="pure-button" href="#" onclick="showEditor()"><img src="img/logo-white.svg"><span>New post</span></a>
+                        <a class="pure-button" href="?new"><img src="img/logo-white.svg"><span>New post</span></a>
                     </li>
                 </ul>
             </nav>
@@ -45,8 +47,8 @@
                     </section>
                     <footer>
                         <h1 class="content-subhead"></h1>
-                        <button class="button-xlarge button button-success" onclick="publish()">Publish</button>
-                        <button class="button-xlarge button" onclick="resetAll()">Cancel</button>
+                        <button class="button publish success" onclick="publishPost()">Publish</button>
+                        <button class="button" onclick="resetAll()">Cancel</button>
                     </footer>
                 </div>
 

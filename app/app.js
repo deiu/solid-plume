@@ -1,30 +1,4 @@
 /* ---- DON'T EDIT BELOW ---- */
-
-// init Medium editor
-// var editor = new MediumEditor('.editor-body', {
-//     toolbar: {
-//         /* These are the default options for the toolbar,
-//            if nothing is passed this is what is used */
-//         allowMultiParagraphSelection: true,
-//         buttons: ['bold', 'italic', 'underline', 'anchor', 'image', 'h2', 'h3', 'quote'],
-//         diffLeft: 0,
-//         diffTop: 0,
-//         firstButtonClass: 'medium-editor-button-first',
-//         lastButtonClass: 'medium-editor-button-last',
-//         standardizeSelectionStart: false,
-//         static: false,
-//         relativeContainer: null,
-//         /* options which only apply when static is true */
-//         align: 'center',
-//         sticky: false,
-//         updateOnEmptySelection: false
-//     },
-//     placeholder: {
-//         text: 'Click to edit'
-//     },
-//     autoLink: true
-// });
-
 var editor = new SimpleMDE({
     status: false,
     spellChecker: false
@@ -43,7 +17,7 @@ var getBodyValue = function() {
 };
 var setBodyValue = function(val) {
     if (val && val.length > 0) {
-        editor.codemirror.getDoc().setValue(val);
+        editor.value(val);
     }
 }
 
@@ -116,19 +90,68 @@ var init = function() {
     window.addEventListener('scroll', stickyScroll, false);
 };
 
+var notify = function(ntype, text) {
+    var timeout = 2000;
+    var note = document.createElement('div');
+    note.classList.add('note');
+    note.innerHTML = text;
+    switch (ntype) {
+        case 'success':
+            note.classList.add('success');
+            break;
+        case 'error':
+            timeout = 3000;
+            note.classList.add('danger');
+            var tip = document.createElement('small');
+            tip.classList.add('small');
+            tip.innerHTML = ' Tip: check console for debug information.';
+            note.appendChild(tip);
+            break;
+        default:
+    }
+    document.querySelector('body').appendChild(note);
+
+    setTimeout(function() {
+        note.remove();
+    }, timeout);
+};
+
 var showViewer = function(url) {
     var viewer = document.querySelector('.viewer');
     var article = addPost(posts[url]);
+    // append article
     viewer.appendChild(article);
-    var back = document.createElement('div');
-    back.classList.add("inline-block");
-    back.innerHTML = '<button class="dark underline" onclick="resetAll()">≪ Go back</button>';
-    viewer.appendChild(back);
-    var edit = document.createElement('div');
-    edit.classList.add("inline-block");
-    edit.innerHTML = '&nbsp;| <a class="dark underline" href="?edit='+encodeURIComponent(url)+'">Edit</a>';
-    // append to viewer
-    viewer.appendChild(edit);
+    var footer = document.createElement('footer');
+    viewer.appendChild(footer);
+    // add separator
+    var sep = document.createElement('h1');
+    sep.classList.add('content-subhead');
+    footer.appendChild(sep);
+    // create button list
+    var buttonList = document.createElement('div');
+    var back = document.createElement('button');
+    back.classList.add("button");
+    back.setAttribute('onclick', 'resetAll()');
+    back.innerHTML = '≪ Go back';
+    buttonList.appendChild(back);
+    if (user.webid == posts[url].author) {
+        // edit button
+        var edit = document.createElement('button');
+        edit.classList.add("button");
+        edit.setAttribute('onclick', 'showEditor("'+url+'")');
+        edit.innerHTML = 'Edit';
+        buttonList.appendChild(edit);
+        // delete button
+        var del = document.createElement('button');
+        del.classList.add('button');
+        del.classList.add('danger');
+        del.classList.add('float-right');
+        del.setAttribute('onclick', 'deletePost("'+url+'")');
+        del.innerHTML = 'Delete';
+        buttonList.appendChild(del);
+    }
+    // append button list to viewer
+    footer.appendChild(buttonList);
     // hide main page
     document.querySelector('.posts').classList.add('hidden');
 }
@@ -136,6 +159,7 @@ var showViewer = function(url) {
 var showEditor = function(url) {
     document.querySelector('.nav').classList.add('hidden');
     document.querySelector('.posts').classList.add('hidden');
+    document.querySelector('.viewer').classList.add('hidden');
     document.querySelector('.editor').classList.remove('hidden');
     if (url && url.length > 0) {
         var post = posts[url];
@@ -152,6 +176,8 @@ var showEditor = function(url) {
         if (post.body) {
             setBodyValue(post.body);
         }
+        document.querySelector('.publish').innerHTML = "Update";
+        document.querySelector('.publish').setAttribute('onclick', 'publishPost("'+url+'")');
     } else {
         document.querySelector('.editor-title').focus();
         document.querySelector('.editor-author').innerHTML = user.name;
@@ -173,21 +199,23 @@ var resetAll = function() {
     window.history.pushState("", "Plume", window.location.pathname);
 };
 
-var publish = function() {
+var publishPost = function(url) {
     var post = {};
-    post.url = user.webid+document.querySelector('.editor-title').innerHTML;
+    post.url = (url && url.length>0)?url:user.webid+document.querySelector('.editor-title').innerHTML;
     post.title = document.querySelector('.editor-title').innerHTML;
     post.author = user.webid;
     post.date = document.querySelector('.editor-date').innerHTML;
     post.body = getBodyValue();
     post.tags = [];
     posts[post.url] = post;
-    console.log(posts);
     // create post dom element
     var article = addPost(post);
     // select element holding all the posts
     var postsdiv = document.querySelector('.posts');
-    if (postsdiv.hasChildNodes()) {
+    if (url) {
+        var self = document.getElementById(url);
+        self.parentNode.replaceChild(article, self);
+    } else if (postsdiv.hasChildNodes()) {
         var first = postsdiv.childNodes[0];
         postsdiv.insertBefore(article, first);
     } else {
@@ -200,6 +228,15 @@ var publish = function() {
         article.style.background = "transparent";
     }, 500);
     resetAll();
+};
+
+var deletePost = function(url) {
+    if (url) {
+        delete posts[url];
+        document.getElementById(url).remove();
+        notify('success', 'Successfully deleted post');
+        resetAll();
+    }
 };
 
 var posts = {
