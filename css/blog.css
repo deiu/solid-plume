@@ -136,6 +136,11 @@ h3 {
     color: #444;
     line-height: 1.8em;
     padding-top: 1em;
+
+}
+.post-body img {
+    max-width: 100%;
+    max-height: 100%;
 }
 .post-meta {
     color: #999;

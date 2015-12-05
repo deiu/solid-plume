@@ -61,7 +61,7 @@ var posts = {
         title: "Photos from CSSConf and JSConf",
         author: "https://deiu.me/profile#me",
         date: "1 Dec 2015",
-        body: "",
+        body: '<img src="https://deiu.me/Public/stata-background.png">',
         tags: [
 
         ]
@@ -99,7 +99,6 @@ var addPost = function(post) {
         picture = author.picture;
     }
 
-
     // select element holding all the posts
     var postsdiv = document.querySelector('.posts');
 
@@ -122,7 +121,6 @@ var addPost = function(post) {
     // append picture to header
     header.appendChild(avatar);
 
-
     // create title
     var title = document.createElement('h2');
     title.classList.add('post-title');
@@ -137,23 +135,22 @@ var addPost = function(post) {
     // append meta to header
     header.appendChild(meta);
 
-    // meta author
+    // create meta author
     var metaAuthor = document.createElement('a');
     metaAuthor.classList.add('post-author');
     metaAuthor.href = post.author;
-    metaAuthor.innerHTML = author.name;
+    metaAuthor.innerHTML = (author.name)?author.name:"Anonymous";
     // append meta author to meta
     meta.appendChild(metaAuthor);
 
-    // meta date
+    // create meta date
     var metaDate = document.createElement('span');
     metaDate.classList.add('post-date');
     metaDate.innerHTML = " on "+post.date;
     // append meta date to meta
     meta.appendChild(metaDate);
 
-    // meta tags
-
+    // create meta tags
     var metaTags = document.createElement('span');
     metaTags.classList.add('post-tags');
     metaTags.innerHTML = " under ";
@@ -192,7 +189,6 @@ var addPost = function(post) {
 
     // append article to list of posts
     postsdiv.appendChild(article);
-
 };
 
 var sortTag = function(name) {
