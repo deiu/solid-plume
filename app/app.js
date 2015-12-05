@@ -116,6 +116,51 @@ var notify = function(ntype, text) {
     }, timeout);
 };
 
+var confirmDelete = function(url) {
+    var postTitle = (posts[url].title)?'<br><p>'+posts[url].title+'</p>':'this post';
+    var div = document.createElement('div');
+    div.id = 'delete';
+    div.classList.add('dialog');
+    var section = document.createElement('section');
+    section.innerHTML = "You are about to delete "+postTitle;
+    div.appendChild(section);
+
+    var footer = document.createElement('footer');
+
+    var del = document.createElement('button');
+    del.classList.add("button");
+    del.classList.add('danger');
+    del.classList.add('float-left');
+    del.setAttribute('onclick', 'deletePost(\''+url+'\')');
+    del.innerHTML = 'Delete';
+    footer.appendChild(del);
+    // delete button
+    var cancel = document.createElement('button');
+    cancel.classList.add('button');
+    cancel.classList.add('float-right');
+    cancel.setAttribute('onclick', 'cancelDelete()');
+    cancel.innerHTML = 'Cancel';
+    footer.appendChild(cancel);
+    div.appendChild(footer);
+
+    // append to body
+    document.querySelector('body').appendChild(div);
+};
+
+var cancelDelete = function() {
+    document.getElementById('delete').remove();
+};
+
+var deletePost = function(url) {
+    if (url) {
+        delete posts[url];
+        document.getElementById(url).remove();
+        document.getElementById('delete').remove();
+        notify('success', 'Successfully deleted post');
+        resetAll();
+    }
+};
+
 var showViewer = function(url) {
     var viewer = document.querySelector('.viewer');
     var article = addPost(posts[url]);
@@ -146,7 +191,7 @@ var showViewer = function(url) {
         del.classList.add('button');
         del.classList.add('danger');
         del.classList.add('float-right');
-        del.setAttribute('onclick', 'deletePost(\''+url+'\')');
+        del.setAttribute('onclick', 'confirmDelete(\''+url+'\')');
         del.innerHTML = 'Delete';
         buttonList.appendChild(del);
     }
@@ -234,15 +279,6 @@ var publishPost = function(url) {
         article.style.background = "transparent";
     }, 500);
     resetAll();
-};
-
-var deletePost = function(url) {
-    if (url) {
-        delete posts[url];
-        document.getElementById(url).remove();
-        notify('success', 'Successfully deleted post');
-        resetAll();
-    }
 };
 
 var posts = {
@@ -412,13 +448,13 @@ var addPost = function(post) {
         edit.classList.add("action-button");
         edit.setAttribute('onclick', 'showEditor(\''+post.url+'\')');
         edit.setAttribute('title', 'Edit post');
-        edit.innerHTML = '<img src="img/logo.svg" alt="Edit post"> Edit';
+        edit.innerHTML = '<img src="img/logo.svg" alt="Edit post">Edit';
         footer.appendChild(edit);
         // delete button
         var del = document.createElement('a');
         del.classList.add('action-button');
         del.classList.add('danger-text');
-        del.setAttribute('onclick', 'deletePost(\''+post.url+'\')');
+        del.setAttribute('onclick', 'confirmDelete(\''+post.url+'\')');
         del.innerHTML = 'Delete';
         footer.appendChild(del);
     }

@@ -39,7 +39,7 @@ h3 {
 
 /* NOTIFICATIONS */
 .note {
-    position: absolute;
+    position: fixed;
     z-index: 101;
     top: 0;
     left: 0;
@@ -151,7 +151,7 @@ a.editor-author, a.editor-author:visited {
 }
 .button {
     display: inline-block;
-    padding: 25px 10px 25px 10px;
+    padding: 20px 10px 20px 10px;
     margin-right: 10px;
     background: #42B8DD;
     border-radius: 4px;
@@ -197,6 +197,30 @@ a.editor-author, a.editor-author:visited {
     position: relative;
     height: 15px;
     top: 5px;
+}
+
+.dialog {
+    width: 300px;
+    position: fixed;
+    padding: 2em;
+    text-align: center;
+    background: #fff;
+    z-index: 10;
+    top: 50%;
+    left: 50%;
+    border: 2px solid #777;
+    border-radius: 5px;
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -ms-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+}
+.dialog p {
+    width: 100%;
+}
+.dialog footer {
+    position: relative;
+    margin-top: 30px;
 }
 
 /* NAV */
