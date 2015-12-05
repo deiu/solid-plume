@@ -25,8 +25,41 @@
 //     autoLink: true
 // });
 
-var editor = new Pen(document.querySelector('.editor-body'));
-editor.destroy();
+var editor = new Editor({
+  element: document.querySelector('.editor-body'),
+  status: false,
+  toolbar: [
+      {name: 'bold', action: Editor.toggleBold},
+      {name: 'italic', action: Editor.toggleItalic},
+      {name: 'code', action: Editor.toggleCodeBlock},
+      '|',
+
+      {name: 'quote', action: Editor.toggleBlockquote},
+      {name: 'unordered-list', action: Editor.toggleUnOrderedList},
+      {name: 'ordered-list', action: Editor.toggleOrderedList},
+      '|',
+
+      {name: 'link', action: Editor.drawLink},
+      {name: 'image', action: Editor.drawImage},
+      '|',
+
+      // {name: 'info', action: 'http://lab.lepture.com/editor/markdown'},
+      {name: 'preview', action: Editor.togglePreview},
+      {name: 'fullscreen', action: Editor.toggleFullScreen}
+    ]
+});
+// load the markdown parse function
+var parse = editor.constructor.markdown;
+// sanitize value from form
+var getBodyValue = function() {
+    var val = editor.codemirror.getValue();
+    return val.replace('"', '\"');
+};
+var setBodyValue = function(val) {
+    if (val && val.length > 0) {
+        editor.codemirror.getDoc().setValue(val);
+    }
+}
 
 // Get params from the URL
 var queryVals = (function(a) {
@@ -49,6 +82,7 @@ var defaults = {
         tagline: "Rocking the Solid Web",
         picture: "https://deiu.me/avatar.jpg",
         owner: "Andrei Sambra",
+        webid: "https://deiu.me/profile#me",
         avatar: "https://deiu.me/avatar.jpg"
 };
 
@@ -57,25 +91,47 @@ var init = function() {
     document.querySelector('.blog-title').innerHTML = defaults.title;
     document.querySelector('.blog-tagline').innerHTML = defaults.tagline;
 
-    for (var i in posts) {
-        addPost(posts[i]);
-    }
+    // select element holding all the posts
+    var postsdiv = document.querySelector('.posts');
 
-    if (queryVals['new'] !== undefined) {
+    if (queryVals['view'] && queryVals['view'].length > 0) {
+        var url = decodeURIComponent(queryVals['view']);
+        var article = addPost(posts[url]);
+        postsdiv.appendChild(article);
+        var back = document.createElement('div');
+        back.classList.add("inline-block");
+        back.innerHTML = '<a class="dark underline" href="" onclick="goBack()">≪ Go back</a>';
+        postsdiv.appendChild(back);
+        var edit = document.createElement('div');
+        edit.classList.add("inline-block");
+        edit.innerHTML = '&nbsp;| <a class="dark underline" href="?edit='+encodeURIComponent(url)+'">Edit</a>';
+        postsdiv.appendChild(edit);
+    } else if (queryVals['edit'] && queryVals['edit'].length > 0) {
+        var url = decodeURIComponent(queryVals['edit']);
+        showEditor(url);
+    } else if (queryVals['new'] !== undefined) {
         showEditor();
+    } else {
+        // add all posts to viewer
+        for (var i in posts) {
+            var article = addPost(posts[i]);
+            postsdiv.appendChild(article);
+        }
     }
 
     var header = document.querySelector('.header');
     var header_height = getComputedStyle(header).height.split('px')[0];
     var nav = document.querySelector('.nav');
-    var nav_height = getComputedStyle(nav).height.split('px')[0];
+    var pic = document.querySelector('.blog-picture');
+    var pic_height = getComputedStyle(pic).height.split('px')[0];
+    var diff = header_height - pic_height;
 
     function stickyScroll(e) {
-        if (window.pageYOffset > (header_height - 50)) {
+        if (window.pageYOffset > (diff + 50)) {
             nav.classList.add('fixed-nav');
         }
 
-        if(window.pageYOffset < (header_height - 50)) {
+        if(window.pageYOffset < (diff + 50)) {
             nav.classList.remove('fixed-nav');
         }
     }
@@ -84,15 +140,35 @@ var init = function() {
     window.addEventListener('scroll', stickyScroll, false);
 };
 
-var showEditor = function() {
+function goBack() {
+    window.history.back();
+}
+
+var showEditor = function(url) {
     document.querySelector('.nav').classList.add('hidden');
     document.querySelector('.posts').classList.add('hidden');
     document.querySelector('.editor').classList.remove('hidden');
-    document.querySelector('.editor-title').focus();
-    document.querySelector('.editor-author').innerHTML = defaults.owner;
-    document.querySelector('.editor-date').innerHTML = moment().format('LL');
-    editor.rebuild();
-}
+    if (url && url.length > 0) {
+        var post = posts[url];
+        if (post.title) {
+            document.querySelector('.editor-title').innerHTML = post.title;
+        }
+        if (post.author) {
+            var author = getAuthorByWebID(post.author);
+            document.querySelector('.editor-author').innerHTML = author.name;
+        }
+        if (post.date) {
+            document.querySelector('.editor-date').innerHTML = post.date;
+        }
+        if (post.body) {
+            setBodyValue(post.body);
+        }
+    } else {
+        document.querySelector('.editor-title').focus();
+        document.querySelector('.editor-author').innerHTML = defaults.owner;
+        document.querySelector('.editor-date').innerHTML = moment().format('LL');
+    }
+};
 
 var cancelPublish = function() {
     document.querySelector('.nav').classList.remove('hidden');
@@ -100,9 +176,14 @@ var cancelPublish = function() {
     document.querySelector('.posts').classList.remove('hidden');
     document.querySelector('.editor-title').innerHTML = '';
     document.querySelector('.editor-author').innerHTML = '';
+    document.querySelector('.editor-date').innerHTML = '';
     document.querySelector('.editor-body').innerHTML = '';
-    editor.destroy();
-}
+    goBack();
+};
+
+var publish = function() {
+    console.log(getBodyValue());
+};
 
 var posts = {
     "https://example.org/post1": {
@@ -110,7 +191,7 @@ var posts = {
         title: "Introducing Solid",
         author: "https://deiu.me/profile#me",
         date: "4 Dec 2015",
-        body: '<img src="https://deiu.me/avatar.jpg"><br>Yesterday at CSSConf, we launched Pure – a new CSS library. Phew! Here are the slides from the presentation. Although it looks pretty minimalist, we’ve been working on Pure for several months. After many iterations, we have released Pure as a set of small, responsive, CSS modules that you can use in every web project.',
+        body: "![test](https://deiu.me/avatar.jpg) \n\n ```\nvar publish = function() {\n  console.log(bodyValue()); \n};\n``` \n ",
         tags: [
             { color: "#5aba59", name: "JS" },
             { color: "#4d85d1", name: "Solid" }
@@ -157,21 +238,26 @@ var authors = {
     "https://user/profile#me": {}
 };
 
-
-var addPost = function(post) {
-    // Big change: <h1 class="content-subhead">Recent Posts</h1>
+var getAuthorByWebID = function(webid) {
     var name = '';
     var picture = 'favicon.png';
-    var author = authors[post.author];
-    if (author && author.name) {
-        name = author.name;
+    if (webid && webid.length > 0) {
+        var author = authors[webid];
+        if (author && author.name) {
+            name = author.name;
+        }
+        if (author && author.picture) {
+            picture = author.picture;
+        }
     }
-    if (author && author.picture) {
-        picture = author.picture;
-    }
+    return {name: name, picture: picture};
+};
 
-    // select element holding all the posts
-    var postsdiv = document.querySelector('.posts');
+var addPost = function(post) {
+    // change separator: <h1 class="content-subhead">Recent Posts</h1>
+    var author = getAuthorByWebID(post.author);
+    var name = author.name;
+    var picture = author.picture;
 
     // create main post element
     var article = document.createElement('article');
@@ -195,7 +281,7 @@ var addPost = function(post) {
     // create title
     var title = document.createElement('h2');
     title.classList.add('post-title');
-    title.innerHTML = (post.title)?post.title:'';
+    title.innerHTML = (post.title)?'<a href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
     // append title to header
     header.appendChild(title);
 
@@ -210,7 +296,7 @@ var addPost = function(post) {
     var metaAuthor = document.createElement('a');
     metaAuthor.classList.add('post-author');
     metaAuthor.href = post.author;
-    metaAuthor.innerHTML = (author.name)?author.name:"Anonymous";
+    metaAuthor.innerHTML = (name)?name:"Anonymous";
     // append meta author to meta
     meta.appendChild(metaAuthor);
 
@@ -225,7 +311,7 @@ var addPost = function(post) {
     var metaTags = document.createElement('span');
     metaTags.classList.add('post-tags');
     metaTags.innerHTML = " under ";
-    if (post.tags.length > 0) {
+    if (post.tags && post.tags.length > 0) {
         for (var i in post.tags) {
             var tag = post.tags[i];
             if (tag.name && tag.name.length > 0) {
@@ -254,12 +340,12 @@ var addPost = function(post) {
     // create body
     var body = document.createElement('section');
     body.classList.add('post-body');
-    body.innerHTML = post.body;
+    body.innerHTML = parse(post.body);
     // append body to article
     article.appendChild(body);
 
     // append article to list of posts
-    postsdiv.appendChild(article);
+    return article;
 };
 
 var sortTag = function(name) {

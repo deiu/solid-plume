@@ -51,7 +51,7 @@ h3 {
     text-align: center;
     top: auto;
     margin: 1em auto 2em auto;
-    height: 300px;
+    /*height: 300px;*/
 }
 
 .sidebar {
@@ -74,6 +74,7 @@ h3 {
     color: rgb(176, 202, 219);
 }
 .blog-picture {
+    display: none;
     width: 150px;
     height: 150px;
     border-radius: 50%;
@@ -84,6 +85,7 @@ h3 {
     color: #444;
 }
 .editor-title {
+    /*background-color: #ffc;*/
     font-size: 2em;
     line-height: 1em;
     min-width: 100%;
@@ -91,11 +93,10 @@ h3 {
     padding: 0.5em 0 0.5em 0;
     border-radius: 3px;
     outline: none;
-    border: 0px solid transparent;
+    border-bottom: 1px dotted #ccc;
 }
-/* #FFC */
 .editor-title:focus {
-    background: #eee;
+    background: #ffc;
     padding-left: 10px;
 }
 span.editor-title:empty::before {
@@ -120,7 +121,9 @@ span.editor-title:empty:focus::before {
 .button-xlarge {
     font-size: 125%;
 }
-
+.button-xsmall {
+    font-size: 50%;
+}
 
 /* NAV */
 .nav {
@@ -181,11 +184,29 @@ span.editor-title:empty:focus::before {
 .post {
     padding-bottom: 2em;
 }
+.post-edit {
+    background: #129FEA;
+    height: 25px;
+    width: 25px;
+    -webkit-mask:  url(../img/logo.svg) no-repeat 50% 50%;
+    mask: url(../img/logo.svg) no-repeat 50% 50%;
+}
 .post-title {
+    display: inline-block;
     font-size: 2em;
+    font-weight: 200;
     color: #222;
     margin-bottom: 0.2em;
 }
+
+.post-title a,a:hover,a:visited {
+    color: inherit;
+    text-decoration: none;
+}
+.post-title:hover {
+    box-shadow: inset 0 0px 0 white, inset 0 -1px 0;
+}
+
 .post-avatar {
     border-radius: 50px;
     float: right;
@@ -197,7 +218,7 @@ span.editor-title:empty:focus::before {
     color: #444;
     line-height: 1.8em;
     padding-top: 1em;
-
+    font-weight: 200;
 }
 .post-body img {
     max-width: 100%;
@@ -213,7 +234,7 @@ span.editor-title:empty:focus::before {
 .post-category {
     margin: 0 0.1em;
     padding: 0.3em 1em;
-    color: #fff;
+    color: #fff!important;
     background: #999;
     font-size: 80%;
 }
@@ -226,6 +247,10 @@ span.editor-title:empty:focus::before {
     margin-left: 1em;
     color: #fff;
     text-shadow: 0 1px 1px #333;
+}
+
+pre {
+    background: #F9F9F9;
 }
 
 .footer {
@@ -244,8 +269,16 @@ span.editor-title:empty:focus::before {
     background: none;
 }
 
+.dark {
+    color: #333!important;
+}
+
 .hidden {
     display: none;
+}
+
+.inline-block {
+    display: inline-block;
 }
 
 .fixed-nav {
@@ -263,6 +296,18 @@ span.editor-title:empty:focus::before {
     height: 1em;
 }
 
+.underline:hover {
+    text-decoration: underline;
+}
+
+/* override */
+.CodeMirror {
+    border: 1px dotted #ccc;
+}
+/*.CodeMirror-cursor {
+    visibility: visible!important;
+}*/
+
 @media (min-width: 48em) {
     .content {
         padding: 1em 3em 0;
@@ -272,6 +317,10 @@ span.editor-title:empty:focus::before {
     .header {
         margin: 3em 2em 0;
         text-align: right;
+    }
+
+    .blog-picture {
+        display: inline;
     }
 
     .fixed-nav {

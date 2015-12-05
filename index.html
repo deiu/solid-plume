@@ -7,7 +7,7 @@
     <title>Plume</title>
     <link rel="stylesheet" href="css/pure-min.css">
     <link rel="stylesheet" href="css/grids-responsive-min.css">
-    <link rel="stylesheet" href="css/pen.css">
+    <link rel="stylesheet" href="css/editor.css">
     <!-- <link rel="stylesheet" href="css/medium-theme.min.css"> -->
     <link rel="stylesheet" href="css/blog.css">
     <link rel="shortcut icon" type="img/png" href="favicon.png">
@@ -36,14 +36,15 @@
                 <!-- Editor -->
                 <div class="editor hidden">
                     <header>
-                        <h1>Create a new post</h1>
+                        <!-- <h1>Create a new entry</h1> -->
                         <span class="editor-title" contenteditable="true"></span>
                         <p>By <a href="#" class="editor-author"></a> on <span class="editor-date"></span></p>
                     </header>
                     <section>
-                        <div class="editor-body" contenteditable="true"></div>
+                        <textarea class="editor-body"></textarea>
                     </section>
                     <footer>
+                        <h1 class="content-subhead"></h1>
                         <button class="button-xlarge pure-button" onclick="publish()">Publish</button>
                         <button class="button-xlarge pure-button" onclick="cancelPublish()">Cancel</button>
                     </footer>
@@ -55,7 +56,7 @@
                 <div class="footer">
                     <div class="pure-menu pure-menu-horizontal">
                         <ul>
-                            <li class="pure-menu-item"><a href="https://github.com/deiu/solid-plume/" class="pure-menu-link" target="_blank">Plume<img class="plume-logo" src="img/logo.svg"></a></li>
+                            <li class="pure-menu-item"><a href="https://github.com/deiu/solid-plume/" class="pure-menu-link" target="_blank">Powered by Plume <img class="plume-logo" src="img/logo.svg"></a></li>
                         </ul>
                     </div>
                 </div>
@@ -64,8 +65,8 @@
     </div>
 
 <!-- Local Javascript -->
-<script src="js/pen.js"></script>
-<script src="js/markdown.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/marked.js"></script>
 <script src="js/moment.min.js"></script>
 <script src="app/app.js"></script>
 </body>
