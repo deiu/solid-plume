@@ -1,5 +1,34 @@
 /* ---- DON'T EDIT BELOW ---- */
-var accURL = {};
+
+// init Medium editor
+// var editor = new MediumEditor('.editor-body', {
+//     toolbar: {
+//         /* These are the default options for the toolbar,
+//            if nothing is passed this is what is used */
+//         allowMultiParagraphSelection: true,
+//         buttons: ['bold', 'italic', 'underline', 'anchor', 'image', 'h2', 'h3', 'quote'],
+//         diffLeft: 0,
+//         diffTop: 0,
+//         firstButtonClass: 'medium-editor-button-first',
+//         lastButtonClass: 'medium-editor-button-last',
+//         standardizeSelectionStart: false,
+//         static: false,
+//         relativeContainer: null,
+//         /* options which only apply when static is true */
+//         align: 'center',
+//         sticky: false,
+//         updateOnEmptySelection: false
+//     },
+//     placeholder: {
+//         text: 'Click to edit'
+//     },
+//     autoLink: true
+// });
+
+var editor = new Pen(document.querySelector('.editor-body'));
+editor.destroy();
+
+// Get params from the URL
 var queryVals = (function(a) {
     if (a == "") return {};
     var b = {};
@@ -31,7 +60,49 @@ var init = function() {
     for (var i in posts) {
         addPost(posts[i]);
     }
+
+    if (queryVals['new'] !== undefined) {
+        showEditor();
+    }
+
+    var header = document.querySelector('.header');
+    var header_height = getComputedStyle(header).height.split('px')[0];
+    var nav = document.querySelector('.nav');
+    var nav_height = getComputedStyle(nav).height.split('px')[0];
+
+    function stickyScroll(e) {
+        if (window.pageYOffset > (header_height - 50)) {
+            nav.classList.add('fixed-nav');
+        }
+
+        if(window.pageYOffset < (header_height - 50)) {
+            nav.classList.remove('fixed-nav');
+        }
+    }
+
+    // Scroll handler to toggle classes.
+    window.addEventListener('scroll', stickyScroll, false);
 };
+
+var showEditor = function() {
+    document.querySelector('.nav').classList.add('hidden');
+    document.querySelector('.posts').classList.add('hidden');
+    document.querySelector('.editor').classList.remove('hidden');
+    document.querySelector('.editor-title').focus();
+    document.querySelector('.editor-author').innerHTML = defaults.owner;
+    document.querySelector('.editor-date').innerHTML = moment().format('LL');
+    editor.rebuild();
+}
+
+var cancelPublish = function() {
+    document.querySelector('.nav').classList.remove('hidden');
+    document.querySelector('.editor').classList.add('hidden');
+    document.querySelector('.posts').classList.remove('hidden');
+    document.querySelector('.editor-title').innerHTML = '';
+    document.querySelector('.editor-author').innerHTML = '';
+    document.querySelector('.editor-body').innerHTML = '';
+    editor.destroy();
+}
 
 var posts = {
     "https://example.org/post1": {
@@ -39,7 +110,7 @@ var posts = {
         title: "Introducing Solid",
         author: "https://deiu.me/profile#me",
         date: "4 Dec 2015",
-        body: "Yesterday at CSSConf, we launched Pure – a new CSS library. Phew! Here are the slides from the presentation. Although it looks pretty minimalist, we’ve been working on Pure for several months. After many iterations, we have released Pure as a set of small, responsive, CSS modules that you can use in every web project.",
+        body: '<img src="https://deiu.me/avatar.jpg"><br>Yesterday at CSSConf, we launched Pure – a new CSS library. Phew! Here are the slides from the presentation. Although it looks pretty minimalist, we’ve been working on Pure for several months. After many iterations, we have released Pure as a set of small, responsive, CSS modules that you can use in every web project.',
         tags: [
             { color: "#5aba59", name: "JS" },
             { color: "#4d85d1", name: "Solid" }

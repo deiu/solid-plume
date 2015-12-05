@@ -50,7 +50,8 @@ h3 {
 .header {
     text-align: center;
     top: auto;
-    margin: 3em auto;
+    margin: 1em auto 2em auto;
+    height: 300px;
 }
 
 .sidebar {
@@ -78,21 +79,71 @@ h3 {
     border-radius: 50%;
 }
 
+/* EDITOR */
+.editor {
+    color: #444;
+}
+.editor-title {
+    font-size: 2em;
+    line-height: 1em;
+    min-width: 100%;
+    display: block;
+    padding: 0.5em 0 0.5em 0;
+    border-radius: 3px;
+    outline: none;
+    border: 0px solid transparent;
+}
+/* #FFC */
+.editor-title:focus {
+    background: #eee;
+    padding-left: 10px;
+}
+span.editor-title:empty::before {
+    content: 'Title';
+    color: #ccc;
+}
+span.editor-title:empty:focus::before {
+    content: 'Title';
+    color: #777;
+}
+
+.editor-body {
+    margin-bottom: 1em;
+    border-radius: 3px;
+    outline: none;
+    border: 1px solid #E6E6E6;
+    font-size: 1em;
+    min-height: 100px;
+    color: #777;
+}
+
+.button-xlarge {
+    font-size: 125%;
+}
+
+
+/* NAV */
+.nav {
+    height: 100px;
+    width: 100%;
+    background-color: #333;
+    line-height: 60px;
+    letter-spacing: 1px;
+}
 .nav-list {
     margin: 0;
-    padding: 0;
+    padding: 1em 0;
     list-style: none;
 }
 .nav-item {
     display: inline-block;
     *display: inline;
-    zoom: 1;
+    zoom: 1.5;
 }
 .nav-item a {
     background: transparent;
     border: 2px solid rgb(176, 202, 219);
     color: #fff;
-    margin-top: 1em;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     font-size: 85%;
@@ -101,6 +152,16 @@ h3 {
 .nav-item a:focus {
     border: 2px solid rgb(61, 146, 201);
     text-decoration: none;
+}
+.nav-item img {
+    height: 20px;
+    display: inline-block;
+}
+.nav-item span {
+    display: inline-block;
+    position: relative;
+    top: 20%;
+    transform: translateY(-20%);
 }
 
 .content-subhead {
@@ -114,7 +175,7 @@ h3 {
 }
 
 .content {
-    padding: 2em 1em 0;
+    padding: 0 1em 0;
 }
 
 .post {
@@ -183,15 +244,38 @@ h3 {
     background: none;
 }
 
+.hidden {
+    display: none;
+}
+
+.fixed-nav {
+    margin: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    -webkit-transform: translateY(0);
+    -ms-transform: translateY(0);
+    transform: translateY(0);
+}
+
+.spacer {
+    height: 1em;
+}
+
 @media (min-width: 48em) {
     .content {
-        padding: 2em 3em 0;
+        padding: 1em 3em 0;
         margin-left: 25%;
     }
 
     .header {
-        margin: 20% 2em 0;
+        margin: 3em 2em 0;
         text-align: right;
+    }
+
+    .fixed-nav {
+        position: relative;
     }
 
     .sidebar {

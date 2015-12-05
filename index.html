@@ -1,44 +1,72 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Plume</title>
-<link rel="stylesheet" href="css/pure-min.css">
-<link rel="stylesheet" href="css/grids-responsive-min.css">
-<link rel="stylesheet" href="css/medium.min.css">
-<link rel="stylesheet" href="css/blog.css">
-<link rel="shortcut icon" type="img/png" href="favicon.png">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plume</title>
+    <link rel="stylesheet" href="css/pure-min.css">
+    <link rel="stylesheet" href="css/grids-responsive-min.css">
+    <link rel="stylesheet" href="css/pen.css">
+    <!-- <link rel="stylesheet" href="css/medium-theme.min.css"> -->
+    <link rel="stylesheet" href="css/blog.css">
+    <link rel="shortcut icon" type="img/png" href="favicon.png">
 </head>
+
 <body>
-
-<div id="layout" class="pure-g">
-    <div class="sidebar pure-u-1 pure-u-md-1-4">
-        <div class="header">
-            <img class="blog-picture" src="https://deiu.me/avatar.jpg">
-            <h1 class="blog-title">Blog Title</h1>
-            <h2 class="blog-tagline">Plume, a Solid blog platform</h2>
+    <div id="layout" class="pure-g">
+        <div class="sidebar pure-u-1 pure-u-md-1-4">
+            <div class="header">
+                <img class="blog-picture" src="https://deiu.me/avatar.jpg">
+                <h1 class="blog-title">Blog Title</h1>
+                <h2 class="blog-tagline">Plume, a Solid blog platform</h2>
+                <div class="spacer"></div>
+                <nav class="nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a class="pure-button" href="#" onclick="showEditor()"><img src="img/logo-white.svg"><span>New post</span></a>
+                    </li>
+                </ul>
+            </nav>
+            </div>
         </div>
-    </div>
 
-    <div class="content pure-u-1 pure-u-md-3-4">
-        <div>
-            <!-- A wrapper for all the blog posts -->
-            <div class="posts"></div>
+        <div class="content pure-u-1 pure-u-md-3-4">
+            <div>
+                <!-- Editor -->
+                <div class="editor hidden">
+                    <header>
+                        <h1>Create a new post</h1>
+                        <span class="editor-title" contenteditable="true"></span>
+                        <p>By <a href="#" class="editor-author"></a> on <span class="editor-date"></span></p>
+                    </header>
+                    <section>
+                        <div class="editor-body" contenteditable="true"></div>
+                    </section>
+                    <footer>
+                        <button class="button-xlarge pure-button" onclick="publish()">Publish</button>
+                        <button class="button-xlarge pure-button" onclick="cancelPublish()">Cancel</button>
+                    </footer>
+                </div>
 
-            <div class="footer">
-                <div class="pure-menu pure-menu-horizontal">
-                    <ul>
-                        <li class="pure-menu-item"><a href="https://github.com/deiu/solid-plume/" class="pure-menu-link" target="blank">Plume<img class="plume-logo" src="img/logo.svg"></a></li>
-                    </ul>
+                <!-- A wrapper for all the blog posts -->
+                <div class="posts"></div>
+
+                <div class="footer">
+                    <div class="pure-menu pure-menu-horizontal">
+                        <ul>
+                            <li class="pure-menu-item"><a href="https://github.com/deiu/solid-plume/" class="pure-menu-link" target="_blank">Plume<img class="plume-logo" src="img/logo.svg"></a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
 <!-- Local Javascript -->
-<script src="js/medium.min.js"></script>
+<script src="js/pen.js"></script>
+<script src="js/markdown.js"></script>
+<script src="js/moment.min.js"></script>
 <script src="app/app.js"></script>
 </body>
 </html>
