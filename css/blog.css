@@ -173,6 +173,8 @@ a.editor-author, a.editor-author:visited {
 }
 .danger {
     background: #CA3C3C!important;
+    color: #fff;
+    border: 0;
 }
 .danger-text {
     color: #CA3C3C!important;
