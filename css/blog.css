@@ -37,6 +37,10 @@ h3 {
     font-weight: 100;
 }
 
+.link {
+    color: inherit;
+}
+
 /* NOTIFICATIONS */
 .note {
     position: fixed;
@@ -97,7 +101,6 @@ h3 {
     display: none;
     width: 150px;
     height: 150px;
-    border-radius: 50%;
 }
 
 /* EDITOR */
@@ -463,8 +466,22 @@ pre {
     float: left;
 }
 
+.center-text {
+    text-align: center;
+}
+
+.center {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .underline:hover {
     text-decoration: underline;
+}
+
+.start a {
+    zoom: 1.5;
 }
 
 @media (min-width: 48em) {
