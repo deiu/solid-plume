@@ -223,8 +223,8 @@ a.editor-author, a.editor-author:visited {
 .color-0 { background: #999!important; }
 .color-1 { background: #ffbf00!important; }
 .color-2 { background: #df2d4f!important; }
-.color-3 { background: #2274a5!important; }
-.color-4 { background: #32936f!important; }
+.color-3 { background: #4d85d1!important; }
+.color-4 { background: #5aba59!important; }
 .color-5 { background: #8156a7!important; }
 
 /* ACTION BUTTONS */
@@ -401,7 +401,7 @@ a.editor-author, a.editor-author:visited {
 }
 
 .fade-out {
-    background-color: #eee;
+    background-color: rgba(238,212,119,0.25);
     transition: background-color 1.5s linear;
     -moz-transition: background-color 1.5s linear;
     -webkit-transition: background-color 1.5s linear;
