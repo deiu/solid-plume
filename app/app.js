@@ -193,6 +193,10 @@ var showEditor = function(url) {
         document.querySelector('.publish').innerHTML = "Update";
         document.querySelector('.publish').setAttribute('onclick', 'publishPost(\''+url+'\')');
         window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?edit="+encodeURIComponent(url));
+    } else {
+        document.querySelector('.publish').innerHTML = "Publish";
+        document.querySelector('.publish').setAttribute('onclick', 'publishPost()');
+        window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?new");
     }
 };
 
@@ -223,7 +227,7 @@ var resetAll = function() {
         document.querySelector('.start').classList.add('hidden');
     }
 
-    window.history.pushState("", "Plume", window.location.pathname);
+    window.history.pushState("", document.querySelector('title').value, window.location.pathname);
 };
 
 var publishPost = function(url) {
