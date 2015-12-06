@@ -16,9 +16,7 @@ var getBodyValue = function() {
     return val.replace('"', '\"');
 };
 var setBodyValue = function(val) {
-    if (val && val.length > 0) {
-        editor.value(val);
-    }
+    editor.value(val);
 }
 
 // Get params from the URL
@@ -203,14 +201,49 @@ var showViewer = function(url) {
 }
 
 var showEditor = function(url) {
+    var tags = document.querySelector('.editor-tags');
+    var appendTag = function(name, color) {
+        var tagDiv = document.createElement('div');
+        tagDiv.classList.add('post-category');
+        tagDiv.classList.add('inline-block');
+        if (color) {
+            tagDiv.setAttribute('style', 'background:'+color+';');
+        }
+        var span = document.createElement('span');
+        span.innerHTML = name;
+        tagDiv.appendChild(span);
+        var tagLink = document.createElement('a');
+        tagLink.setAttribute('onclick', 'this.parentElement.remove()');
+        tagLink.innerHTML = 'x';
+        tagDiv.appendChild(tagLink);
+        tags.appendChild(tagDiv);
+    };
+
     document.querySelector('.nav').classList.add('hidden');
     document.querySelector('.posts').classList.add('hidden');
     document.querySelector('.viewer').classList.add('hidden');
     document.querySelector('.editor').classList.remove('hidden');
+    document.querySelector('.editor-title').focus();
+    document.querySelector('.editor-author').innerHTML = user.name;
+    document.querySelector('.editor-date').innerHTML = moment().format('LL');
+    document.querySelector('.editor-tags').innerHTML = '';
+    document.querySelector('.editor-add-tag').value = '';
+    setBodyValue('');
+
+    // add event listener for tags
+    document.querySelector('.editor-add-tag').onkeypress = function(e){
+        if (!e) e = window.event;
+        var keyCode = e.keyCode || e.which;
+        if (keyCode == '13'){
+            appendTag(document.querySelector('.editor-add-tag').value, document.querySelector('.color-picker').style.background);
+            document.querySelector('.editor-add-tag').value = '';
+        }
+    }
+
+    window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?new");
+    // preload data if requested
     if (url && url.length > 0) {
         var post = posts[url];
-        console.log("URL editor: "+url);
-        console.log(post);
         if (post.title) {
             document.querySelector('.editor-title').innerHTML = post.title;
         }
@@ -221,18 +254,32 @@ var showEditor = function(url) {
         if (post.date) {
             document.querySelector('.editor-date').innerHTML = post.date;
         }
+
+        // add tags
+        if (post.tags && post.tags.length > 0) {
+            var tagInput = document.createElement('input');
+            for (var i in post.tags) {
+                var tag = post.tags[i];
+                if (tag.name && tag.name.length > 0) {
+                    appendTag(tag.name, tag.color);
+                }
+            }
+
+        }
         if (post.body) {
             setBodyValue(post.body);
         }
+
         document.querySelector('.publish').innerHTML = "Update";
         document.querySelector('.publish').setAttribute('onclick', 'publishPost(\''+url+'\')');
-    } else {
-        document.querySelector('.editor-title').focus();
-        document.querySelector('.editor-author').innerHTML = user.name;
-        document.querySelector('.editor-date').innerHTML = moment().format('LL');
-        setBodyValue('');
-        window.history.pushState("", "Plume", window.location.pathname+"?new");
+        window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?edit="+encodeURIComponent(url));
     }
+};
+
+var setColor = function(color) {
+    document.querySelector('.color-picker').style.background = window.getComputedStyle(document.querySelector('.'+color), null).backgroundColor;
+    // document.querySelector('.color-picker').classList.add(color);
+    document.querySelector('.pure-menu-active').classList.remove('pure-menu-active');
 };
 
 var resetAll = function() {
@@ -250,6 +297,19 @@ var resetAll = function() {
 };
 
 var publishPost = function(url) {
+    function rgbToHex(color) {
+        color = color.replace(/\s/g,"");
+        var aRGB = color.match(/^rgb\((\d{1,3}[%]?),(\d{1,3}[%]?),(\d{1,3}[%]?)\)$/i);
+        if(aRGB)
+        {
+            color = '';
+            for (var i=1;  i<=3; i++) color += Math.round((aRGB[i][aRGB[i].length-1]=="%"?2.55:1)*parseInt(aRGB[i])).toString(16).replace(/^(.)$/,'0$1');
+        }
+        else color = color.replace(/^#?([\da-f])([\da-f])([\da-f])$/i, '$1$1$2$2$3$3');
+        return '#'+color;
+    };
+
+
     var post = {};
     post.url = (url && url.length>0)?url:user.webid+document.querySelector('.editor-title').innerHTML;
     post.title = document.querySelector('.editor-title').innerHTML;
@@ -257,8 +317,18 @@ var publishPost = function(url) {
     post.date = document.querySelector('.editor-date').innerHTML;
     post.body = getBodyValue();
     post.tags = [];
+    var allTags = document.querySelectorAll('.editor-tags .post-category');
+    console.log(allTags.length);
+    for (var i in allTags) {
+        console.log(allTags[i]);
+        if (allTags[i].style) {
+            var tag = {};
+            tag.name = allTags[i].querySelector('span').innerHTML;
+            tag.color = rgbToHex(allTags[i].style.background);
+            post.tags.push(tag);
+        }
+    }
     posts[post.url] = post;
-    console.log(post);
     // create post dom element
     var article = addPost(post);
     // select element holding all the posts
@@ -287,7 +357,7 @@ var posts = {
         title: "Introducing Solid",
         author: "https://deiu.me/profile#me",
         date: "4 Dec 2015",
-        body: "![test](https://deiu.me/avatar.jpg) \n\n ```\nvar publish = function() {\n  console.log(bodyValue()); \n};\n``` \n ",
+        body: "![test](https://deiu.me/avatar.jpg) \n\n```\nvar publish = function() {\n  console.log(bodyValue()); \n};\n```\n",
         tags: [
             { color: "#5aba59", name: "JS" },
             { color: "#4d85d1", name: "Solid" }

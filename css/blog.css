@@ -101,6 +101,9 @@ h3 {
 }
 
 /* EDITOR */
+.CodeMirror, .CodeMirror-scroll {
+    min-height: 200px;
+}
 .editor {
     padding-top: 1em;
     color: #444;
@@ -120,6 +123,16 @@ h3 {
     background: #ffc;
     padding-left: 10px;
 }
+.editor-tags a {
+    margin-left: 5px;
+    color: #ccc;
+    cursor: pointer;
+}
+.editor-add-tag {
+    width: 100px;
+    border: 0;
+    border-bottom: 1px dotted #777;
+}
 span.editor-title:empty::before {
     content: 'Title';
     color: #ccc;
@@ -130,6 +143,9 @@ span.editor-title:empty:focus::before {
 }
 a.editor-author, a.editor-author:visited {
     color: #3D92C9;
+}
+.editor header {
+    margin-bottom: 10px;
 }
 .editor footer {
     margin-top: 10px;
@@ -183,6 +199,32 @@ a.editor-author, a.editor-author:visited {
 .clickable {
     cursor: pointer;
 }
+
+/* DROPDOWN */
+.pure-menu-children {
+    list-style: none;
+    position: absolute!important;
+    left: initial;
+    top: initial;
+    margin: 0;
+    padding: 0;
+    z-index: 3;
+}
+.pure-menu-has-children>.pure-menu-link:after {
+    content: "\25BE";
+    font-size: small;
+    padding-left: 0.5em;
+}
+
+/* COLOR PICKER */
+.color-0 { background: #999!important; }
+.color-1 { background: #ffbf00!important; }
+.color-2 { background: #df2d4f!important; }
+.color-3 { background: #2274a5!important; }
+.color-4 { background: #32936f!important; }
+.color-5 { background: #8156a7!important; }
+
+/* ACTION BUTTONS */
 
 .action-button {
     background-color: #fff;
