@@ -16,7 +16,7 @@
     <div id="layout" class="pure-g">
         <div class="sidebar pure-u-1 pure-u-md-1-4">
             <div class="header">
-                <div class="clickable" onclick="resetAll()">
+                <div class="clickable" onclick="Plume.resetAll()">
                     <img class="blog-picture" src="">
                     <h1 class="blog-title">Blog Title</h1>
                     <h2 class="blog-tagline">Plume, a Solid blog platform</h2>
@@ -25,7 +25,7 @@
                 <nav class="nav">
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="pure-button" href="#" onclick="showEditor()"><img src="img/logo-white.svg"><span>New post</span></a>
+                        <a class="pure-button" href="#" onclick="Plume.showEditor()"><img src="img/logo-white.svg"><span>New post</span></a>
                     </li>
                 </ul>
             </nav>
@@ -46,12 +46,12 @@
                             <div class="editor-tag-color inline-block pure-menu pure-menu-has-children">
                                 <div class="post-category pure-menu-link color-picker">Color</div>
                                 <ul class="pure-menu-children">
-                                    <li class="pure-menu-item" onclick="setColor('color-0')"><div class="post-category color-0">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="setColor('color-1')"><div class="post-category color-1">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="setColor('color-2')"><div class="post-category color-2">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="setColor('color-3')"><div class="post-category color-3">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="setColor('color-4')"><div class="post-category color-4">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="setColor('color-5')"><div class="post-category color-5">&nbsp;</div></li>
+                                    <li class="pure-menu-item" onclick="Plume.setColor('color-0')"><div class="post-category color-0">&nbsp;</div></li>
+                                    <li class="pure-menu-item" onclick="Plume.setColor('color-1')"><div class="post-category color-1">&nbsp;</div></li>
+                                    <li class="pure-menu-item" onclick="Plume.setColor('color-2')"><div class="post-category color-2">&nbsp;</div></li>
+                                    <li class="pure-menu-item" onclick="Plume.setColor('color-3')"><div class="post-category color-3">&nbsp;</div></li>
+                                    <li class="pure-menu-item" onclick="Plume.setColor('color-4')"><div class="post-category color-4">&nbsp;</div></li>
+                                    <li class="pure-menu-item" onclick="Plume.setColor('color-5')"><div class="post-category color-5">&nbsp;</div></li>
                                 </ul>
                             </div>
                             <input type="text" class="editor-add-tag inline-block" placeholder="name">
@@ -61,8 +61,8 @@
                         <textarea class="editor-body"></textarea>
                     </section>
                     <footer>
-                        <button class="button publish success" onclick="publishPost()">Publish</button>
-                        <button class="button" onclick="resetAll()">Cancel</button>
+                        <button class="button publish success" onclick="Plume.publishPost()">Publish</button>
+                        <button class="button" onclick="Plume.resetAll()">Cancel</button>
                     </footer>
                 </div>
 
@@ -75,7 +75,7 @@
                 <!-- Write your first article -->
                 <div class="start center-text hidden">
                     <h1>You haven't published anything yet.</h1>
-                    <h2><a class="action-button" href="#" onclick="showEditor()" title="Start writing">Start writing!</a></h2>
+                    <h2><a class="action-button" href="#" onclick="Plume.showEditor()" title="Start writing">Start writing!</a></h2>
                 </div>
 
                 <div class="footer">
@@ -93,7 +93,6 @@
 <script src="js/simplemde.min.js"></script>
 <script src="js/moment.min.js"></script>
 <script src="js/dropdown.js"></script>
-<script src="app/util.js"></script>
 <script src="app/app.js"></script>
 </body>
 </html>
