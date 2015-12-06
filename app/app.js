@@ -117,7 +117,7 @@ var notify = function(ntype, text) {
 };
 
 var confirmDelete = function(url) {
-    var postTitle = (posts[url].title)?'<br><p>'+posts[url].title+'</p>':'this post';
+    var postTitle = (posts[url].title)?'<br><p><strong>'+posts[url].title+'</strong></p>':'this post';
     var div = document.createElement('div');
     div.id = 'delete';
     div.classList.add('dialog');

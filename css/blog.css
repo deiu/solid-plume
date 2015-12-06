@@ -131,6 +131,9 @@ span.editor-title:empty:focus::before {
 a.editor-author, a.editor-author:visited {
     color: #3D92C9;
 }
+.editor footer {
+    margin-top: 10px;
+}
 
 .editor-body {
     margin-bottom: 1em;
@@ -153,18 +156,20 @@ a.editor-author, a.editor-author:visited {
     display: inline-block;
     padding: 20px 10px 20px 10px;
     margin-right: 10px;
-    background: #42B8DD;
+    background: #fff;
     border-radius: 4px;
     font-weight: normal;
     font-size: 14px;
-    color: #fff;
+    color: #777;
     letter-spacing: 1px;
     line-height: 1px;
     text-transform: uppercase;
-    border: 0;
+    border: 1px solid #777;
 }
 .success {
     background: #1CB841!important;
+    color: #fff;
+    border: 0;
 }
 .danger {
     background: #CA3C3C!important;
@@ -204,6 +209,7 @@ a.editor-author, a.editor-author:visited {
     position: fixed;
     padding: 2em;
     text-align: center;
+    font-weight: 200;
     background: #fff;
     z-index: 10;
     top: 50%;
