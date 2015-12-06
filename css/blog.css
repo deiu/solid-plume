@@ -123,6 +123,9 @@ h3 {
     background: #ffc;
     padding-left: 10px;
 }
+.editor-meta {
+    padding-top: 5px;
+}
 .editor-tags a {
     margin-left: 5px;
     color: #ccc;
@@ -212,7 +215,7 @@ a.editor-author, a.editor-author:visited {
 }
 .pure-menu-has-children>.pure-menu-link:after {
     content: "\25BE";
-    font-size: small;
+    font-size: 80%;
     padding-left: 0.5em;
 }
 

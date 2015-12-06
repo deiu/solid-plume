@@ -19,22 +19,6 @@ var setBodyValue = function(val) {
     editor.value(val);
 }
 
-// Get params from the URL
-var queryVals = (function(a) {
-    if (a == "") return {};
-    var b = {};
-    for (var i = 0; i < a.length; ++i)
-    {
-        var p=a[i].split('=', 2);
-        if (p.length == 1)
-            b[p[0]] = "";
-        else
-            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-    }
-    return b;
-})(window.location.search.substr(1).split('&'));
-
-
 var user = {
         title: "/dev/solid",
         tagline: "Rocking the Solid Web",
@@ -63,7 +47,7 @@ var init = function() {
 
     // add all posts to viewer
     for (var i in posts) {
-        var article = addPost(posts[i]);
+        var article = addPostToDom(posts[i]);
         postsdiv.appendChild(article);
     }
 
@@ -86,32 +70,6 @@ var init = function() {
 
     // Scroll handler to toggle classes.
     window.addEventListener('scroll', stickyScroll, false);
-};
-
-var notify = function(ntype, text) {
-    var timeout = 2000;
-    var note = document.createElement('div');
-    note.classList.add('note');
-    note.innerHTML = text;
-    switch (ntype) {
-        case 'success':
-            note.classList.add('success');
-            break;
-        case 'error':
-            timeout = 3000;
-            note.classList.add('danger');
-            var tip = document.createElement('small');
-            tip.classList.add('small');
-            tip.innerHTML = ' Tip: check console for debug information.';
-            note.appendChild(tip);
-            break;
-        default:
-    }
-    document.querySelector('body').appendChild(note);
-
-    setTimeout(function() {
-        note.remove();
-    }, timeout);
 };
 
 var confirmDelete = function(url) {
@@ -161,7 +119,7 @@ var deletePost = function(url) {
 
 var showViewer = function(url) {
     var viewer = document.querySelector('.viewer');
-    var article = addPost(posts[url]);
+    var article = addPostToDom(posts[url]);
     // append article
     viewer.appendChild(article);
     var footer = document.createElement('footer');
@@ -217,6 +175,8 @@ var showEditor = function(url) {
         tagLink.innerHTML = 'x';
         tagDiv.appendChild(tagLink);
         tags.appendChild(tagDiv);
+        // clear input
+        document.querySelector('.editor-add-tag').value = '';
     };
 
     document.querySelector('.nav').classList.add('hidden');
@@ -236,7 +196,6 @@ var showEditor = function(url) {
         var keyCode = e.keyCode || e.which;
         if (keyCode == '13'){
             appendTag(document.querySelector('.editor-add-tag').value, document.querySelector('.color-picker').style.background);
-            document.querySelector('.editor-add-tag').value = '';
         }
     }
 
@@ -280,6 +239,7 @@ var setColor = function(color) {
     document.querySelector('.color-picker').style.background = window.getComputedStyle(document.querySelector('.'+color), null).backgroundColor;
     // document.querySelector('.color-picker').classList.add(color);
     document.querySelector('.pure-menu-active').classList.remove('pure-menu-active');
+    document.querySelector('.editor-add-tag').focus();
 };
 
 var resetAll = function() {
@@ -330,7 +290,7 @@ var publishPost = function(url) {
     }
     posts[post.url] = post;
     // create post dom element
-    var article = addPost(post);
+    var article = addPostToDom(post);
     // select element holding all the posts
     var postsdiv = document.querySelector('.posts');
     if (url) {
@@ -419,7 +379,7 @@ var getAuthorByWebID = function(webid) {
     return {name: name, picture: picture};
 };
 
-var addPost = function(post) {
+var addPostToDom = function(post) {
     // change separator: <h1 class="content-subhead">Recent Posts</h1>
     var author = getAuthorByWebID(post.author);
     var name = author.name;
