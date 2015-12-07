@@ -98,6 +98,7 @@ Plume = (function (window, document) {
                 // fetch and set user profile
                 Solid.getWebIDProfile(webid).then(function(g) {
                     getUserProfile(webid, g).then(function(profile){
+                        console.log("authenticated user "+webid);
                         // set WebID
                         user.webid = profile.webid;
                         user.name = profile.name;
@@ -106,7 +107,7 @@ Plume = (function (window, document) {
                         authors[webid] = user;
 
                         // add new post button if owner
-                        if (config.owner == webid) {
+                        if (config.owner == user.webid) {
                             console.log("Is owner");
                             document.querySelector('.nav').classList.remove('hidden');
                         }
@@ -125,16 +126,6 @@ Plume = (function (window, document) {
         var pic_height = getComputedStyle(pic).height.split('px')[0];
         var diff = header_height - pic_height;
 
-        function stickyScroll(e) {
-            if (window.pageYOffset > (diff + 50)) {
-                nav.classList.add('fixed-nav');
-            }
-
-            if(window.pageYOffset < (diff + 50)) {
-                nav.classList.remove('fixed-nav');
-            }
-        }
-
         if (queryVals['view'] && queryVals['view'].length > 0) {
             var url = decodeURIComponent(queryVals['view']);
             showViewer(url);
@@ -145,8 +136,18 @@ Plume = (function (window, document) {
             showEditor();
         }
 
-        // Scroll handler to toggle classes.
-        window.addEventListener('scroll', stickyScroll, false);
+        // function stickyScroll(e) {
+        //     if (window.pageYOffset > (diff + 50)) {
+        //         nav.classList.add('fixed-nav');
+        //     }
+
+        //     if(window.pageYOffset < (diff + 50)) {
+        //         nav.classList.remove('fixed-nav');
+        //     }
+        // }
+
+        // // Scroll handler to toggle classes.
+        // window.addEventListener('scroll', stickyScroll, false);
     };
 
     // Init data container
@@ -360,29 +361,7 @@ Plume = (function (window, document) {
             document.querySelector('.editor-add-tag').value = '';
         };
 
-        document.querySelector('.nav').classList.add('hidden');
-        document.querySelector('.posts').classList.add('hidden');
-        document.querySelector('.viewer').classList.add('hidden');
-        document.querySelector('.start').classList.add('hidden');
-        document.querySelector('.editor').classList.remove('hidden');
-        document.querySelector('.editor-title').focus();
-        document.querySelector('.editor-author').innerHTML = user.name;
-        document.querySelector('.editor-date').innerHTML = formatDate();
-        document.querySelector('.editor-tags').innerHTML = '';
-        document.querySelector('.editor-add-tag').value = '';
-        setBodyValue('');
-
-        // add event listener for tags
-        document.querySelector('.editor-add-tag').onkeypress = function(e){
-            if (!e) e = window.event;
-            var keyCode = e.keyCode || e.which;
-            if (keyCode == '13'){
-                appendTag(document.querySelector('.editor-add-tag').value, document.querySelector('.color-picker').style.background);
-            }
-        }
-
-        // preload data if updating
-        if (url && url.length > 0) {
+        var loadPost = function(url) {
             var post = posts[url];
             if (post.title) {
                 document.querySelector('.editor-title').value = post.title;
@@ -407,12 +386,47 @@ Plume = (function (window, document) {
 
             }
             if (post.body) {
-                setBodyValue(post.body);
+                setBodyValue(decodeHTML(post.body));
             }
 
             document.querySelector('.publish').innerHTML = "Update";
             document.querySelector('.publish').setAttribute('onclick', 'Plume.publishPost(\''+url+'\')');
             window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?edit="+encodeURIComponent(url));
+        };
+
+        document.querySelector('.nav').classList.add('hidden');
+        document.querySelector('.posts').classList.add('hidden');
+        document.querySelector('.viewer').classList.add('hidden');
+        document.querySelector('.start').classList.add('hidden');
+        document.querySelector('.editor').classList.remove('hidden');
+        document.querySelector('.editor-title').focus();
+        document.querySelector('.editor-author').innerHTML = user.name;
+        document.querySelector('.editor-date').innerHTML = formatDate();
+        document.querySelector('.editor-tags').innerHTML = '';
+        document.querySelector('.editor-add-tag').value = '';
+        setBodyValue('');
+
+        // add event listener for tags
+        document.querySelector('.editor-add-tag').onkeypress = function(e){
+            if (!e) e = window.event;
+            var keyCode = e.keyCode || e.which;
+            if (keyCode == '13'){
+                appendTag(document.querySelector('.editor-add-tag').value, document.querySelector('.color-picker').style.background);
+            }
+        }
+
+        // preload data if updating
+        if (url && url.length > 0) {
+            console.log(posts);
+            if (posts[url]) {
+                loadPost(url);
+            } else {
+                fetchPost(url).then(
+                    function(post) {
+                        loadPost(url);
+                    }
+                );
+            }
         } else {
             document.querySelector('.publish').innerHTML = "Publish";
             document.querySelector('.publish').setAttribute('onclick', 'Plume.publishPost()');
@@ -427,7 +441,10 @@ Plume = (function (window, document) {
     };
 
     var resetAll = function() {
-        document.querySelector('.nav').classList.remove('hidden');
+        if (config.owner == user.webid) {
+            console.log("Is owner");
+            document.querySelector('.nav').classList.remove('hidden');
+        }
         document.querySelector('.editor').classList.add('hidden');
         document.querySelector('.viewer').classList.add('hidden');
         document.querySelector('.viewer').innerHTML = '';
@@ -569,74 +586,17 @@ Plume = (function (window, document) {
             function(statements) {
                 if (statements.length === 0) {
                     resetAll();
+                    document.querySelector('.start').classList.remove('hidden');
                 }
                 statements.forEach(function(s){
                     console.log("Fetching post "+s.object.uri);
                     var url = s.object.uri;
-                    Solid.getResource(url).then(
-                        function(g) {
-                            var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
 
-                            if (p) {
-                                var subject = p.subject;
-                                var post = { url: subject.uri };
-
-                                // add title
-                                var title = g.any(subject, DCT('title'));
-                                if (title && title.value) {
-                                    post.title = encodeHTML(title.value);
-                                }
-
-                                // add author
-                                var creator = g.any(subject, SIOC('has_creator'));
-                                if (creator) {
-                                    var author = {};
-                                    var accountOf = g.any(creator, SIOC('account_of'));
-                                    if (accountOf) {
-                                        post.author = encodeHTML(accountOf.uri);
-                                    }
-                                    var name = g.any(creator, FOAF('name'));
-                                    if (name && name.value && name.value.length > 0) {
-                                        author.name = encodeHTML(name.value);
-                                    }
-                                    var picture = g.any(creator, SIOC('avatar'));
-                                    if (picture) {
-                                        author.picture = encodeHTML(picture.uri);
-                                    }
-
-                                    // add to list of authors if not self
-                                    if (post.author != user.webid) {
-                                        authors[post.author] = author;
-                                    }
-
-                                    // update author info with fresh data
-                                    updateAuthorInfo(post.author, url);
-                                }
-
-                                // add date
-                                var created = g.any(subject, DCT('created'));
-                                if (created) {
-                                    post.created = created.value;
-                                }
-
-                                // add body
-                                var body = g.any(subject, SIOC('content'));
-                                if (body) {
-                                    post.body = body.value;
-                                }
-
-                                // add post to local list
-                                posts[post.url] = post;
-
-                                // add post to dom
-                                var article = addPostToDom(post);
-                                postsdiv.appendChild(article);
-                            }
-                        }
-                    )
-                    .catch(
-                        function(err) {
-                            console.log('Could not fetch post from: '+url+' HTTP '+err);
+                    fetchPost(url).then(
+                        function(post) {
+                            // add post to dom
+                            var article = addPostToDom(post);
+                            postsdiv.appendChild(article);
                         }
                     );
                 });
@@ -647,6 +607,77 @@ Plume = (function (window, document) {
                 console.log('Could not fetch contents from data container: '+config.dataContainer+' Error: '+err);
             }
         );
+    };
+
+    var fetchPost = function(url) {
+        var promise = new Promise(function(resolve, reject){
+            Solid.getResource(url).then(
+                function(g) {
+                    var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
+
+                    if (p) {
+                        var subject = p.subject;
+                        var post = { url: subject.uri };
+
+                        // add title
+                        var title = g.any(subject, DCT('title'));
+                        if (title && title.value) {
+                            post.title = encodeHTML(title.value);
+                        }
+
+                        // add author
+                        var creator = g.any(subject, SIOC('has_creator'));
+                        if (creator) {
+                            var author = {};
+                            var accountOf = g.any(creator, SIOC('account_of'));
+                            if (accountOf) {
+                                post.author = encodeHTML(accountOf.uri);
+                            }
+                            var name = g.any(creator, FOAF('name'));
+                            if (name && name.value && name.value.length > 0) {
+                                author.name = encodeHTML(name.value);
+                            }
+                            var picture = g.any(creator, SIOC('avatar'));
+                            if (picture) {
+                                author.picture = encodeHTML(picture.uri);
+                            }
+
+                            // add to list of authors if not self
+                            if (post.author != user.webid) {
+                                authors[post.author] = author;
+                            }
+
+                            // update author info with fresh data
+                            updateAuthorInfo(post.author, url);
+                        }
+
+                        // add date
+                        var created = g.any(subject, DCT('created'));
+                        if (created) {
+                            post.created = created.value;
+                        }
+
+                        // add body
+                        var body = g.any(subject, SIOC('content'));
+                        if (body) {
+                            post.body = body.value;
+                        }
+
+                        // add post to local list
+                        posts[post.url] = post;
+                        resolve(post);
+                    }
+                }
+            )
+            .catch(
+                function(err) {
+                    console.log('Could not fetch post from: '+url+' HTTP '+err);
+                    reject(err);
+                }
+            );
+        });
+
+        return promise;
     };
 
     var getAuthorByWebID = function(webid) {

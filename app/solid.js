@@ -88,15 +88,14 @@ Solid = (function(window) {
             getResource(url).then(
                 function(graph) {
                     // find additional resources to load
-                    console.log("Initial statements: "+graph.statements.length);
                     var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
                     var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
                     var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
                     var toLoad = sameAs.length + seeAlso.length + prefs.length;
-                    console.log("To load: "+toLoad);
+                    console.log("To WebID profiles to load: "+toLoad);
 
                     var checkAll = function() {
-                        console.log("Left to load: "+toLoad);
+                        console.log("Profiles left to load: "+toLoad);
                         if (toLoad === 0) {
                             resolve(graph);
                         }
