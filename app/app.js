@@ -605,20 +605,21 @@ Plume = (function (window, document) {
                             // append to dom
                             postsdiv.appendChild(article);
 
-                            // get element current height
-                            var section = document.getElementById(post.url).querySelector('section');
-                            var height = section.offsetHeight;
+                            if (config.fadeText) {
+                                // get element current height
+                                var section = document.getElementById(post.url).querySelector('section');
+                                var height = section.offsetHeight;
 
-                            // fade post contents if post is too long
-                            if (height > 250) {
-                                section.classList.add('less');
-                                var fade = document.createElement('div');
-                                fade.classList.add('fade-bottom');
-                                fade.classList.add('center-text');
-                                fade.innerHTML = "&mdash; more &mdash;";
-                                article.insertBefore(fade, article.querySelector('footer'));
+                                // fade post contents if post is too long
+                                if (height > 250) {
+                                    section.classList.add('less');
+                                    var fade = document.createElement('div');
+                                    fade.classList.add('fade-bottom');
+                                    fade.classList.add('center-text');
+                                    fade.innerHTML = '<a class="no-decoration clickable" onclick="Plume.showViewer(\''+post.url+"')\">&mdash; more &mdash;</a>";
+                                    article.insertBefore(fade, article.querySelector('footer'));
+                                }
                             }
-
                         }
                     );
                 });

@@ -7,6 +7,7 @@ Plume.config = {
     title: "My awesome blog",
     tagline: "Light as a feather",
     picture: "img/logo-white.svg",
+    fadeText: true,
     defaultPath: 'posts',
     dataContainer: ''
 };
