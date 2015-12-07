@@ -85,8 +85,11 @@ Plume = (function (window, document) {
             config.defaultPath += '/';
         }
 
+        // set auth URL
+        var url = (config.dataContainer)?config.dataContainer:appURL;
+
         // Get the current user
-        Solid.isAuthenticated(appURL).then(function(webid){
+        Solid.isAuthenticated(url).then(function(webid){
             if (webid.length === 0) {
                 console.log("Could not find WebID from User header, or user is not authenticated.");
                 initContainer();
