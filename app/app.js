@@ -91,7 +91,7 @@ Plume = (function (window, document) {
         // Get the current user
         Solid.isAuthenticated(url).then(function(webid){
             if (webid.length === 0) {
-                console.log("Could not find WebID from User header, or user is not authenticated.");
+                console.log("Could not find WebID from User header, or user is not authenticated. Used "+url);
                 initContainer();
             } else if (webid.slice(0, 4) == 'http') {
                 // fetch and set user profile
@@ -486,6 +486,7 @@ Plume = (function (window, document) {
 
     // save post data to server
     var savePost = function(post, url) {
+        console.log(post);
         // this is called after the post data is done writing to the server
         var updateLocal = function(location) {
             post.url = location;
@@ -528,6 +529,7 @@ Plume = (function (window, document) {
         g.add($rdf.sym('#author'), FOAF('name'), $rdf.lit(authors[post.author].name));
         g.add($rdf.sym('#author'), SIOC('avatar'), $rdf.sym(authors[post.author].picture));
 
+        console.log(g.toN3());
         var triples = new $rdf.Serializer(g).toN3(g);
 
         if (url) {
