@@ -614,6 +614,8 @@ Plume = (function (window, document) {
                                 section.classList.add('less');
                                 var fade = document.createElement('div');
                                 fade.classList.add('fade-bottom');
+                                fade.classList.add('center-text');
+                                fade.innerHTML = "&mdash; more &mdash;";
                                 article.insertBefore(fade, article.querySelector('footer'));
                             }
 
