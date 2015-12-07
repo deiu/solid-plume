@@ -670,10 +670,10 @@ Plume = (function (window, document) {
         meta.appendChild(metaDate);
 
         // create meta tags
-        var metaTags = document.createElement('span');
-        metaTags.classList.add('post-tags');
-        metaTags.innerHTML = " under ";
         if (post.tags && post.tags.length > 0) {
+            var metaTags = document.createElement('span');
+            metaTags.classList.add('post-tags');
+            metaTags.innerHTML = " under ";
             for (var i in post.tags) {
                 var tag = post.tags[i];
                 if (tag.name && tag.name.length > 0) {
@@ -688,16 +688,10 @@ Plume = (function (window, document) {
                     metaTags.appendChild(tagLink);
                 }
             }
-        } else {
-            var tagLink = document.createElement('a');
-            tagLink.classList.add('post-category');
-            tagLink.innerHTML = "Uncategorized";
-            tagLink.href = "#";
-            tagLink.setAttribute('onclick', 'Plume.sortTag("Uncategorized")');
-            metaTags.appendChild(tagLink);
+
+            // append meta tag
+            meta.appendChild(metaTags);
         }
-        // append meta tag
-        meta.appendChild(metaTags);
 
         // create body
         var body = document.createElement('section');
