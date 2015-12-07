@@ -420,7 +420,7 @@ a.editor-author, a.editor-author:visited {
     mask: url(../img/logo.svg) no-repeat 50% 50%;
 }
 .post-title {
-    font-size: 2em;
+    font-size: 1.5em;
     font-weight: 200;
     color: #333;
     margin-bottom: 0.2em;
@@ -612,6 +612,10 @@ pre {
     .header {
         margin: 3em 2em 0;
         text-align: right;
+    }
+
+    .post-title {
+        font-size: 2em;
     }
 
     .blog-picture {

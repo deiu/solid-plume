@@ -95,7 +95,7 @@ Solid = (function(window) {
 
                     var checkAll = function() {
                         if (toLoad === 0) {
-                            resolve(graph);
+                            return resolve(graph);
                         }
                     }
                     // Load sameAs files
@@ -108,7 +108,8 @@ Solid = (function(window) {
                                     checkAll();
                                 }
                             ).catch(
-                            function(){
+                            function(err){
+                                console.log(err);
                                 toLoad--;
                                 checkAll();
                             });
@@ -124,7 +125,8 @@ Solid = (function(window) {
                                     checkAll();
                                 }
                             ).catch(
-                            function(){
+                            function(err){
+                                console.log(err);
                                 toLoad--;
                                 checkAll();
                             });
@@ -140,7 +142,8 @@ Solid = (function(window) {
                                     checkAll();
                                 }
                             ).catch(
-                            function(){
+                            function(err){
+                                console.log(err);
                                 toLoad--;
                                 checkAll();
                             });
@@ -160,7 +163,7 @@ Solid = (function(window) {
     };
 
     // return metadata for a given request
-    var responseMeta = function(resp) {
+    var parseResponseMeta = function(resp) {
         var h = parseLinkHeader(resp.getResponseHeader('Link'));
         var meta = {};
         meta.url = resp.getResponseHeader('Location');
@@ -188,7 +191,7 @@ Solid = (function(window) {
             http.open('HEAD', url);
             http.onreadystatechange = function() {
                 if (this.readyState == this.DONE) {
-                    resolve(responseMeta(this));
+                    resolve(parseResponseMeta(this));
                 }
             };
             http.send();
@@ -213,7 +216,7 @@ Solid = (function(window) {
             http.onreadystatechange = function() {
                 if (this.readyState == this.DONE) {
                     if (this.status === 200 || this.status === 201) {
-                        resolve(responseMeta(this));
+                        resolve(parseResponseMeta(this));
                     } else {
                         reject(this);
                     }
@@ -240,7 +243,7 @@ Solid = (function(window) {
             http.onreadystatechange = function() {
                 if (this.readyState == this.DONE) {
                     if (this.status === 200 || this.status === 201) {
-                        resolve(responseMeta(this));
+                        return resolve(parseResponseMeta(this));
                     } else {
                         reject(this);
                     }
@@ -266,7 +269,7 @@ Solid = (function(window) {
             http.onreadystatechange = function() {
                 if (this.readyState == this.DONE) {
                     if (this.status === 200) {
-                        resolve(true);
+                        return resolve(true);
                     } else {
                         reject(this);
                     }

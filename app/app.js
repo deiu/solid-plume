@@ -97,21 +97,21 @@ Plume = (function (window, document) {
             } else if (webid.slice(0, 4) == 'http') {
                 // fetch and set user profile
                 Solid.getWebIDProfile(webid).then(function(g) {
-                    getUserProfile(webid, g).then(function(profile){
-                        // set WebID
-                        user.webid = profile.webid;
-                        user.name = profile.name;
-                        user.picture = profile.picture;
-                        // add self to authors list
-                        authors[webid] = user;
+                    return getUserProfile(webid, g);
+                }).then(function(profile){
+                    // set WebID
+                    user.webid = profile.webid;
+                    user.name = profile.name;
+                    user.picture = profile.picture;
+                    // add self to authors list
+                    authors[webid] = user;
 
-                        // add new post button if owner
-                        if (config.owner == user.webid) {
-                            document.querySelector('.nav').classList.remove('hidden');
-                        }
+                    // add new post button if owner
+                    if (config.owner == user.webid) {
+                        document.querySelector('.nav').classList.remove('hidden');
+                    }
 
-                        initContainer();
-                    });
+                    initContainer();
                 });
             }
         });
