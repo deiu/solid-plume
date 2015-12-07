@@ -26,6 +26,7 @@ Plume = (function (window, document) {
         spellChecker: false,
         initialValue: 'This is a markdown editor, type something...'
     });
+    // hljs.initHighlightingOnLoad();
     var parseMD = function(data) {
         if (data) {
             return editor.markdown(data);
@@ -76,20 +77,11 @@ Plume = (function (window, document) {
 
         var getUser = function() {
             return new Promise(function(resolve){
-
+                //@@@
                 resolve();
             });
         };
 
-        if (queryVals['view'] && queryVals['view'].length > 0) {
-            var url = decodeURIComponent(queryVals['view']);
-            showViewer(url);
-        } else if (queryVals['edit'] && queryVals['edit'].length > 0) {
-            var url = decodeURIComponent(queryVals['edit']);
-            showEditor(url);
-        } else if (queryVals['new'] !== undefined) {
-            showEditor();
-        }
         // select element holding all the posts
         var postsdiv = document.querySelector('.posts');
 
@@ -102,11 +94,11 @@ Plume = (function (window, document) {
         } else {
             // no posts, display a mock one
             var acme = {
-                url: "https://example.org/post1",
+                url: "https://example.org/",
                 title: "Welcome to Plume, a Solid blogging platform",
                 author: "https://example.org/user#me",
                 date: "3 Dec 2015",
-                body: "**Note!** This is a demo post. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), which decouples data from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles.\n\nGive it a try, write your first post!",
+                body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), which decouples data from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article. You won't be able to save it however.\n\nGive it a try, write your first post!",
                 tags: [
                     { color: "#df2d4f", name: "Decentralization" },
                     { color: "#4d85d1", name: "Solid" }
@@ -131,6 +123,16 @@ Plume = (function (window, document) {
             if(window.pageYOffset < (diff + 50)) {
                 nav.classList.remove('fixed-nav');
             }
+        }
+
+        if (queryVals['view'] && queryVals['view'].length > 0) {
+            var url = decodeURIComponent(queryVals['view']);
+            showViewer(url);
+        } else if (queryVals['edit'] && queryVals['edit'].length > 0) {
+            var url = decodeURIComponent(queryVals['edit']);
+            showEditor(url);
+        } else if (queryVals['new'] !== undefined) {
+            showEditor();
         }
 
         // Scroll handler to toggle classes.
@@ -185,6 +187,10 @@ Plume = (function (window, document) {
     var showViewer = function(url) {
         var viewer = document.querySelector('.viewer');
         var article = addPostToDom(posts[url]);
+        if (!article) {
+            resetAll();
+            return;
+        }
         // append article
         viewer.appendChild(article);
         var footer = document.createElement('footer');
@@ -221,6 +227,8 @@ Plume = (function (window, document) {
         // hide main page
         document.querySelector('.posts').classList.add('hidden');
         document.querySelector('.viewer').classList.remove('hidden');
+
+        window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?view="+encodeURIComponent(url));
     }
 
     var showEditor = function(url) {
@@ -343,7 +351,6 @@ Plume = (function (window, document) {
         post.tags = [];
         var allTags = document.querySelectorAll('.editor-tags .post-category');
         for (var i in allTags) {
-            console.log(allTags[i]);
             if (allTags[i].style) {
                 var tag = {};
                 tag.name = allTags[i].querySelector('span').innerHTML;
@@ -365,14 +372,23 @@ Plume = (function (window, document) {
         } else {
             postsdiv.appendChild(article);
         }
-        // fade out to indicate new content
-        article.scrollIntoView(true);
-        article.classList.add("fade-out");
-        notify('success', 'Your post was published');
-        setTimeout(function() {
-            article.style.background = "transparent";
-        }, 500);
-        resetAll();
+
+        // do not save the default post
+        if (post.url == 'https://example.org/') {
+            resetAll();
+            return;
+        } else {
+            // Write data to server
+
+            // fade out to indicate new content
+            article.scrollIntoView(true);
+            article.classList.add("fade-out");
+            notify('success', 'Your post was published');
+            setTimeout(function() {
+                article.style.background = "transparent";
+            }, 500);
+            resetAll();
+        }
     };
 
     // var posts = {
@@ -445,6 +461,9 @@ Plume = (function (window, document) {
 
     var addPostToDom = function(post) {
         // change separator: <h1 class="content-subhead">Recent Posts</h1>
+        if (!post) {
+            return;
+        }
         var author = getAuthorByWebID(post.author);
         var name = author.name;
         var picture = author.picture;
@@ -464,7 +483,7 @@ Plume = (function (window, document) {
         var avatar = document.createElement('img');
         avatar.classList.add('post-avatar');
         avatar.src = picture;
-        avatar.alt = name+"&#x27;s avatar";
+        avatar.alt = avatar.title = name+"'s picture";
         // append picture to header
         header.appendChild(avatar);
 
@@ -486,7 +505,7 @@ Plume = (function (window, document) {
         var metaAuthor = document.createElement('a');
         metaAuthor.classList.add('post-author');
         metaAuthor.href = post.author;
-        metaAuthor.innerHTML = (name)?name:"Anonymous";
+        metaAuthor.innerHTML = name;
         // append meta author to meta
         meta.appendChild(metaAuthor);
 
