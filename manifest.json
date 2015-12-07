@@ -1,0 +1,14 @@
+{
+  "name": "Plume",
+  "icons": [
+    {
+      "src": "img/favicon.png",
+      "sizes": "256x256",
+      "type": "image/icon.png",
+      "density": "4.0"
+    }
+  ],
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait"
+}
