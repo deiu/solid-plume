@@ -198,10 +198,12 @@ Plume = (function (window, document) {
     // name: "John Doe",
     // picture: "https://example.org/profile.png"
     var getUserProfile = function(webid, g) {
-        console.log(g.toNT());
-        var promise = new Promise(function(resolve){
+        var promise = new Promise(function(resolve) {
             var profile = {};
             var webidRes = $rdf.sym(webid);
+
+            console.log(webid, webidRes);
+            console.log(g.toNT());
 
             // set webid
             profile.webid = webid;
