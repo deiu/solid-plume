@@ -135,7 +135,7 @@ h3 {
     cursor: pointer;
 }
 .editor-add-tag {
-    width: 100px;
+    width: 70px;
     border: 0;
     border-bottom: 1px dotted #777;
 }
@@ -214,6 +214,7 @@ a.editor-author, a.editor-author:visited {
     top: initial;
     margin: 0;
     padding: 0;
+    width: 70px;
     z-index: 3;
 }
 .pure-menu-has-children>.pure-menu-link:after {

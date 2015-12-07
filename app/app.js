@@ -9,8 +9,10 @@ Plume = (function (window, document) {
     var config = {
         title: "/dev/solid",
         tagline: "Rocking the Solid Web",
-        picture: "img/logo-white.svg"
+        picture: "img/logo-white.svg",
+        dataPath: 'posts'
     }
+
     // RDF
     var PROXY = "https://databox.me/proxy?uri={uri}";
     var TIMEOUT = 5000;
@@ -92,6 +94,31 @@ Plume = (function (window, document) {
                 });
             }
         });
+
+        // Init data container
+        if (!config.dataContainer) {
+            Solid.resourceStatus(appURL+config.dataPath).then(
+                function(container) {
+                    // create data container for posts if it doesn't exist
+                    if (!container.exists && container.err === null) {
+                        Solid.newResource(appURL, config.dataPath, null, true).then(
+                            function(res) {
+                                if (res.url && res.url.length > 0) {
+                                    config.dataContainer = res.url;
+                                }
+                                console.log(config);
+                            }
+                        )
+                        .catch(
+                            function(err) {
+                                console.log("Could not create data container for posts: HTTP "+err.status);
+                                notify('error', 'Could not create data container');
+                            }
+                        );
+                    }
+                }
+            );
+        }
 
         // select element holding all the posts
         var postsdiv = document.querySelector('.posts');
@@ -561,12 +588,9 @@ Plume = (function (window, document) {
         console.log(name);
     };
 
-    // start app
-    init();
-
-    // Misc
+    // Misc/helper functions
     var notify = function(ntype, text) {
-        var timeout = 2000;
+        var timeout = 1000;
         var note = document.createElement('div');
         note.classList.add('note');
         note.innerHTML = text;
@@ -610,6 +634,13 @@ Plume = (function (window, document) {
         text.innerHTML = (text.innerHTML=="Preview")?"Edit":"Preview";
     };
 
+
+
+    // start app
+    init();
+
+
+
     // return public functions
     return {
         resetAll: resetAll,
@@ -621,5 +652,4 @@ Plume = (function (window, document) {
         deletePost: deletePost,
         togglePreview: togglePreview
     };
-
 }(this, this.document));
