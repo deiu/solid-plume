@@ -34,11 +34,17 @@
 
         <div class="content pure-u-1 pure-u-md-3-4">
             <div>
+                <!-- Loading animation -->
+                <div class="loading center-text hidden">
+                    <div class="loadingbox"></div>
+                    <p>Loading posts...</p>
+                </div>
+
                 <!-- Editor -->
                 <div class="editor hidden">
                     <header>
-                        <!-- <h1>Create a new entry</h1> -->
-                        <span class="editor-title" contenteditable="true"></span>
+                        <!-- <span class="editor-title" contenteditable="true"></span> -->
+                        <input type="text" class="editor-title" placeholder="Title">
                         <div class="editor-meta inline-block">By <a href="#" class="editor-author"></a> on <span class="editor-date"></span></div>
                         <div class="editor-meta editor-tags inline-block"></div>
                         <div class="editor-meta inline-block">

@@ -18,6 +18,269 @@ Solid = (function(window) {
     var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
     var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
 
+    // return the current user's WebID from the User header if authenticated
+    // resolve(string)
+    var isAuthenticated = function(url) {
+        if (!url || url.length === 0) {
+            url = window.location.origin+window.location.pathname;
+        }
+        return new Promise(function(resolve){
+            var http = new XMLHttpRequest();
+            http.open('HEAD', url);
+            http.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    if (this.status === 200) {
+                        var user = (this.getResponseHeader('User'))?this.getResponseHeader('User'):'';
+                    } else {
+                        var user = '';
+                    }
+                    resolve(user);
+                }
+            };
+            http.send();
+        });
+    };
+
+    // fetch an RDF resource
+    // resolve(graph) | reject(this)
+    var getResource = function(url) {
+        var promise = new Promise(function(resolve, reject) {
+            var g = new $rdf.graph();
+            var f = new $rdf.fetcher(g, TIMEOUT);
+
+            var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
+            f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
+                if (!ok) {
+                    reject({ok: ok, body: body, xhr: xhr});
+                } else {
+                    resolve(g);
+                }
+            });
+        });
+
+        return promise;
+    };
+
+    // returns an array of all the resources within an LDP container
+    // resolve(array[statement]) | reject
+    var getContainerResources = function(url) {
+        var promise = new Promise(function(resolve, reject) {
+            getResource(url).then(
+                function(g) {
+                    resolve(g.statementsMatching($rdf.sym(url), LDP('contains'), undefined));
+                }
+            )
+            .catch(
+                function(err) {
+                    reject(err);
+                }
+            );
+        });
+
+        return promise;
+    };
+
+    // fetch user profile (follow sameAs links) and return promise with a graph
+    // resolve(graph)
+    var getWebIDProfile = function(url) {
+        var promise = new Promise(function(resolve) {
+            // Load main profile
+            getResource(url).then(
+                function(graph) {
+                    // find additional resources to load
+                    var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
+                    var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
+                    var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
+                    var toLoad = sameAs.length + seeAlso.length + prefs.length;
+                    console.log("To load: "+toLoad);
+
+                    var checkAll = function() {
+                        console.log("Left to load: "+toLoad);
+                        if (toLoad === 0) {
+                            resolve(graph);
+                        }
+                    }
+                    // Load sameAs files
+                    if (sameAs.length > 0) {
+                        sameAs.forEach(function(same){
+                            console.log("Loading "+same.object.value);
+                            getResource(same.object.value).then(
+                                function(g) {
+                                    addGraph(graph, g);
+                                    toLoad--;
+                                    checkAll();
+                                }
+                            ).catch(
+                            function(){
+                                toLoad--;
+                                checkAll();
+                            });
+                        });
+                    }
+                    // Load seeAlso files
+                    if (seeAlso.length > 0) {
+                        seeAlso.forEach(function(see){
+                            console.log("Loading "+see.object.value);
+                            getResource(see.object.value).then(
+                                function(g) {
+                                    addGraph(graph, g);
+                                    toLoad--;
+                                    checkAll();
+                                }
+                            ).catch(
+                            function(){
+                                toLoad--;
+                                checkAll();
+                            });
+                        });
+                    }
+                    // Load preferences files
+                    if (prefs.length > 0) {
+                        prefs.forEach(function(pref){
+                            console.log("Loading "+pref.object.value);
+                            getResource(pref.object.value).then(
+                                function(g) {
+                                    addGraph(graph, g);
+                                    toLoad--;
+                                    checkAll();
+                                }
+                            ).catch(
+                            function(){
+                                toLoad--;
+                                checkAll();
+                            });
+                        });
+                    }
+                }
+            )
+            .catch();
+        });
+
+        return promise;
+    };
+
+    // return metadata for a given request
+    var responseMeta = function(resp) {
+        var h = parseLinkHeader(resp.getResponseHeader('Link'));
+        var meta = {};
+        meta.url = resp.getResponseHeader('Location');
+        meta.acl = h['acl'];
+        meta.meta = (h['meta'])?h['meta']:h['describedBy'];
+        meta.user = (resp.getResponseHeader('User'))?resp.getResponseHeader('User'):'';
+        meta.exists = false;
+        meta.err = null;
+        if (resp.status === 200) {
+            meta.exists = true;
+        } else if (resp.status >= 500) {
+            meta.err = {
+                status: 500,
+                body: resp.responseText
+            };
+        }
+        return meta;
+    };
+
+    // check if a resource exists and return useful Solid info (acl, meta, type, etc)
+    // resolve(metaObj)
+    var resourceStatus = function(url) {
+        var promise = new Promise(function(resolve) {
+            var http = new XMLHttpRequest();
+            http.open('HEAD', url);
+            http.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    resolve(responseMeta(this));
+                }
+            };
+            http.send();
+        });
+
+        return promise;
+    };
+
+    // create new resource
+    // resolve(metaObj) | reject
+    var newResource = function(url, slug, data, isContainer) {
+        var resType = (isContainer)?'http://www.w3.org/ns/ldp#BasicContainer':'http://www.w3.org/ns/ldp#Resource';
+        var promise = new Promise(function(resolve, reject) {
+            var http = new XMLHttpRequest();
+            http.open('POST', url);
+            http.setRequestHeader('Content-Type', 'text/turtle');
+            http.setRequestHeader('Link', '<'+resType+'>; rel="type"');
+            if (slug && slug.length > 0) {
+                http.setRequestHeader('Slug', slug);
+            }
+            http.withCredentials = true;
+            http.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    if (this.status === 200 || this.status === 201) {
+                        resolve(responseMeta(this));
+                    } else {
+                        reject(this);
+                    }
+                }
+            };
+            if (data) {
+                http.send(data);
+            } else {
+                http.send();
+            }
+        });
+
+        return promise;
+    };
+
+    // update/create resource using HTTP PUT
+    // resolve(metaObj) | reject
+    var putResource = function(url, data) {
+        var promise = new Promise(function(resolve, reject) {
+            var http = new XMLHttpRequest();
+            http.open('PUT', url);
+            http.setRequestHeader('Content-Type', 'text/turtle');
+            http.withCredentials = true;
+            http.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    if (this.status === 200 || this.status === 201) {
+                        resolve(responseMeta(this));
+                    } else {
+                        reject(this);
+                    }
+                }
+            };
+            if (data) {
+                http.send(data);
+            } else {
+                http.send();
+            }
+        });
+
+        return promise;
+    };
+
+    // delete a resource
+    // resolve(true) | reject
+    var deleteResource = function(url) {
+        var promise = new Promise(function(resolve, reject) {
+            var http = new XMLHttpRequest();
+            http.open('DELETE', url);
+            http.withCredentials = true;
+            http.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    if (this.status === 200) {
+                        resolve(true);
+                    } else {
+                        reject(this);
+                    }
+                }
+            };
+            http.send();
+        });
+
+        return promise;
+    }
+
+    // --------------- Helper functions ---------------
+
+    // parse a Link header
     var parseLinkHeader = function(link) {
         var linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g;
         var paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g;
@@ -47,233 +310,16 @@ Solid = (function(window) {
         });
     };
 
-    // return the current user's WebID from the User header
-    var getUserFromURL = function(url) {
-        if (!url || url.length === 0) {
-            url = window.location.origin+window.location.pathname;
-        }
-        return new Promise(function(resolve){
-            var http = new XMLHttpRequest();
-            http.open('HEAD', url);
-            http.onreadystatechange = function() {
-                if (this.readyState == this.DONE) {
-                    if (this.status === 200) {
-                        var user = (this.getResponseHeader('User'))?this.getResponseHeader('User'):'';
-                    } else {
-                        var user = '';
-                    }
-                    resolve(user);
-                }
-            };
-            http.send();
-        });
-    };
-
-    // fetch an RDF resource
-    var getResouce = function(url) {
-        var promise = new Promise(function(resolve, reject) {
-            var g = new $rdf.graph();
-            var f = new $rdf.fetcher(g, TIMEOUT);
-
-            var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
-            f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
-                if (!ok) {
-                    reject({ok: ok, body: body, xhr: xhr});
-                } else {
-                    resolve(g);
-                }
-            });
-        });
-
-        return promise;
-    };
-
-    // fetch user profile (follow sameAs links) and return promise with a graph
-    var getWebIDProfile = function(url) {
-        var promise = new Promise(function(resolve) {
-
-            // Load main profile
-            getResouce(url).then(
-                function(graph) {
-                    // find additional resources to load
-                    var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
-                    var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
-                    var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
-                    var toLoad = sameAs.length + seeAlso.length + prefs.length;
-                    console.log("To load: "+toLoad);
-
-                    var checkAll = function() {
-                        console.log("Left to load: "+toLoad);
-                        if (toLoad === 0) {
-                            resolve(graph);
-                        }
-                    }
-                    // Load sameAs files
-                    if (sameAs.length > 0) {
-                        sameAs.forEach(function(same){
-                            console.log("Loading "+same.object.value);
-                            getResouce(same.object.value).then(
-                                function(g) {
-                                    addGraph(graph, g);
-                                    toLoad--;
-                                    checkAll();
-                                }
-                            ).catch(
-                            function(){
-                                toLoad--;
-                                checkAll();
-                            });
-                        });
-                    }
-                    // Load seeAlso files
-                    if (seeAlso.length > 0) {
-                        seeAlso.forEach(function(see){
-                            console.log("Loading "+see.object.value);
-                            getResouce(see.object.value).then(
-                                function(g) {
-                                    addGraph(graph, g);
-                                    toLoad--;
-                                    checkAll();
-                                }
-                            ).catch(
-                            function(){
-                                toLoad--;
-                                checkAll();
-                            });
-                        });
-                    }
-                    // Load preferences files
-                    if (prefs.length > 0) {
-                        prefs.forEach(function(pref){
-                            console.log("Loading "+pref.object.value);
-                            getResouce(pref.object.value).then(
-                                function(g) {
-                                    addGraph(graph, g);
-                                    toLoad--;
-                                    checkAll();
-                                }
-                            ).catch(
-                            function(){
-                                toLoad--;
-                                checkAll();
-                            });
-                        });
-                    }
-                }
-            )
-            .catch();
-        });
-
-        return promise;
-    };
-
-    // check if a resource exists and return useful Solid info (acl, meta, type, etc)
-    var resourceStatus = function(url) {
-        var promise = new Promise(function(resolve) {
-            var http = new XMLHttpRequest();
-            http.open('HEAD', url);
-            http.onreadystatechange = function() {
-                if (this.readyState == this.DONE) {
-                    var h = parseLinkHeader(this.getResponseHeader('Link'));
-                    var res = {};
-                    res.err = null;
-                    res.exists = false;
-                    res.acl = h['acl'];
-                    res.meta = (h['meta'])?h['meta']:h['describedBy'];
-                    // exists?
-                    if (this.status === 200) {
-                        res.exists = true;
-                    } else if (this.status >= 500) {
-                        res.err = {
-                            status: 500,
-                            body: this.responseText
-                        };
-                    }
-                    resolve(res);
-                }
-            };
-            http.send();
-        });
-
-        return promise;
-    };
-
-    // create new resource
-    var newResource = function(url, slug, data, isContainer) {
-        var resType = (isContainer)?'http://www.w3.org/ns/ldp#BasicContainer':'http://www.w3.org/ns/ldp#Resource';
-        var promise = new Promise(function(resolve, reject) {
-            var http = new XMLHttpRequest();
-            http.open('POST', url);
-            http.setRequestHeader('Content-Type', 'text/turtle');
-            http.setRequestHeader('Link', '<'+resType+'>; rel="type"');
-            if (slug && slug.length > 0) {
-                http.setRequestHeader('Slug', slug);
-            }
-            http.withCredentials = true;
-            http.onreadystatechange = function() {
-                if (this.readyState == this.DONE) {
-                    if (this.status === 200 || this.status === 201) {
-                        var res = {};
-                        // get Location
-                        res.url = this.getResponseHeader('Location');
-                        var h = parseLinkHeader(this.getResponseHeader('Link'));
-                        res.acl = h['acl'];
-                        res.meta = (h['meta'])?h['meta']:h['describedBy'];
-                        resolve(res);
-                    } else {
-                        reject(this);
-                    }
-                }
-            };
-            if (data) {
-                http.send(data);
-            } else {
-                http.send();
-            }
-        });
-
-        return promise;
-    };
-
-    // update/create resource using HTTP PUT
-    var putResource = function(url, data) {
-        var promise = new Promise(function(resolve, reject) {
-            var http = new XMLHttpRequest();
-            http.open('PUT', url);
-            http.setRequestHeader('Content-Type', 'text/turtle');
-            http.withCredentials = true;
-            http.onreadystatechange = function() {
-                if (this.readyState == this.DONE) {
-                    if (this.status === 200 || this.status === 201) {
-                        var res = {};
-                        // get Location
-                        res.url = this.getResponseHeader('Location');
-                        var h = parseLinkHeader(this.getResponseHeader('Link'));
-                        res.acl = h['acl'];
-                        res.meta = (h['meta'])?h['meta']:h['describedBy'];
-                        resolve(res);
-                    } else {
-                        reject(this);
-                    }
-                }
-            };
-            if (data) {
-                http.send(data);
-            } else {
-                http.send();
-            }
-        });
-
-        return promise;
-    };
-
+    // return public methods
     return {
         parseLinkHeader: parseLinkHeader,
-        getUserFromURL: getUserFromURL,
-        getResouce: getResouce,
+        isAuthenticated: isAuthenticated,
+        getResource: getResource,
+        getContainerResources: getContainerResources,
         getWebIDProfile: getWebIDProfile,
         resourceStatus: resourceStatus,
         newResource: newResource,
-        putResource: putResource
+        putResource: putResource,
+        deleteResource: deleteResource
     };
 }(this));
