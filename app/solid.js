@@ -88,6 +88,7 @@ Solid = (function(window) {
             getResource(url).then(
                 function(graph) {
                     // find additional resources to load
+                    console.log("Initial statements: "+graph.statements.length);
                     var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
                     var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
                     var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
@@ -104,7 +105,7 @@ Solid = (function(window) {
                     if (sameAs.length > 0) {
                         sameAs.forEach(function(same){
                             console.log("Loading "+same.object.value);
-                            getResource(same.object.value).then(
+                            getResource(same.object.value, same.object.value).then(
                                 function(g) {
                                     addGraph(graph, g);
                                     toLoad--;
@@ -123,7 +124,7 @@ Solid = (function(window) {
                             console.log("Loading "+see.object.value);
                             getResource(see.object.value).then(
                                 function(g) {
-                                    addGraph(graph, g);
+                                    addGraph(graph, g, see.object.value);
                                     toLoad--;
                                     checkAll();
                                 }
@@ -140,7 +141,7 @@ Solid = (function(window) {
                             console.log("Loading "+pref.object.value);
                             getResource(pref.object.value).then(
                                 function(g) {
-                                    addGraph(graph, g);
+                                    addGraph(graph, g, pref.object.value);
                                     toLoad--;
                                     checkAll();
                                 }
@@ -309,9 +310,10 @@ Solid = (function(window) {
     };
 
     // add statements from one graph object to another
-    var addGraph = function(toGraph, fromGraph) {
-        fromGraph.statements.forEach(function(st) {
-            toGraph.addStatement(st);
+    var addGraph = function(toGraph, fromGraph, docURI) {
+        var why = (docURI)?$rdf.sym(docURI):undefined;
+        fromGraph.statementsMatching(undefined, undefined, undefined, why).forEach(function(st) {
+            toGraph.add(st.subject, st.predicate, st.object, st.why);
         });
     };
 

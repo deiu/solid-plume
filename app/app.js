@@ -90,6 +90,7 @@ Plume = (function (window, document) {
 
         // Get the current user
         Solid.isAuthenticated(url).then(function(webid){
+            document.querySelector('.nav').classList.add('hidden');
             if (webid.length === 0) {
                 console.log("Could not find WebID from User header, or user is not authenticated. Used "+url);
                 initContainer();
@@ -103,10 +104,10 @@ Plume = (function (window, document) {
                         user.picture = profile.picture;
                         // add self to authors list
                         authors[webid] = user;
-                        console.log(user);
 
                         // add new post button if owner
                         if (config.owner == webid) {
+                            console.log("Is owner");
                             document.querySelector('.nav').classList.remove('hidden');
                         }
 
@@ -202,15 +203,11 @@ Plume = (function (window, document) {
             var profile = {};
             var webidRes = $rdf.sym(webid);
 
-            console.log(webid, webidRes);
-            console.log(g.toNT());
-
             // set webid
             profile.webid = webid;
 
             // set name
             var name = g.any(webidRes, FOAF('name'));
-            console.log("Name: "+name);
             if (name && name.value.length > 0) {
                 profile.name = name.value;
             } else {
@@ -247,8 +244,6 @@ Plume = (function (window, document) {
             if (pic && pic.uri.length > 0) {
                 profile.picture = pic.uri;
             }
-
-            console.log(profile);
 
             resolve(profile);
         });
