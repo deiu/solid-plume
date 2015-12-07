@@ -70,12 +70,12 @@ Solid = (function(window) {
     };
 
     // fetch an RDF resource
-    var getResouce = function(uri) {
+    var getResouce = function(url) {
         var promise = new Promise(function(resolve, reject) {
             var g = new $rdf.graph();
             var f = new $rdf.fetcher(g, TIMEOUT);
 
-            var docURI = (uri.indexOf('#') >= 0)?uri.slice(0, uri.indexOf('#')):uri;
+            var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
             f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
                 if (!ok) {
                     reject({ok: ok, body: body, xhr: xhr});
@@ -89,16 +89,16 @@ Solid = (function(window) {
     };
 
     // fetch user profile (follow sameAs links) and return promise with a graph
-    var getWebIDProfile = function(uri) {
+    var getWebIDProfile = function(url) {
         var promise = new Promise(function(resolve) {
 
             // Load main profile
-            getResouce(uri).then(
+            getResouce(url).then(
                 function(graph) {
                     // find additional resources to load
-                    var sameAs = graph.statementsMatching($rdf.sym(uri), OWL('sameAs'), undefined);
-                    var seeAlso = graph.statementsMatching($rdf.sym(uri), OWL('seeAlso'), undefined);
-                    var prefs = graph.statementsMatching($rdf.sym(uri), PIM('preferencesFile'), undefined);
+                    var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
+                    var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
+                    var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
                     var toLoad = sameAs.length + seeAlso.length + prefs.length;
                     console.log("To load: "+toLoad);
 
@@ -168,10 +168,10 @@ Solid = (function(window) {
     };
 
     // check if a resource exists and return useful Solid info (acl, meta, type, etc)
-    var resourceStatus = function(uri) {
+    var resourceStatus = function(url) {
         var promise = new Promise(function(resolve) {
             var http = new XMLHttpRequest();
-            http.open('HEAD', uri);
+            http.open('HEAD', url);
             http.onreadystatechange = function() {
                 if (this.readyState == this.DONE) {
                     var h = parseLinkHeader(this.getResponseHeader('Link'));
@@ -199,11 +199,11 @@ Solid = (function(window) {
     };
 
     // create new resource
-    var newResource = function(uri, slug, data, isContainer) {
+    var newResource = function(url, slug, data, isContainer) {
         var resType = (isContainer)?'http://www.w3.org/ns/ldp#BasicContainer':'http://www.w3.org/ns/ldp#Resource';
         var promise = new Promise(function(resolve, reject) {
             var http = new XMLHttpRequest();
-            http.open('POST', uri);
+            http.open('POST', url);
             http.setRequestHeader('Content-Type', 'text/turtle');
             http.setRequestHeader('Link', '<'+resType+'>; rel="type"');
             if (slug && slug.length > 0) {
@@ -215,7 +215,39 @@ Solid = (function(window) {
                     if (this.status === 200 || this.status === 201) {
                         var res = {};
                         // get Location
-                        res.uri = this.getResponseHeader('Location');
+                        res.url = this.getResponseHeader('Location');
+                        var h = parseLinkHeader(this.getResponseHeader('Link'));
+                        res.acl = h['acl'];
+                        res.meta = (h['meta'])?h['meta']:h['describedBy'];
+                        resolve(res);
+                    } else {
+                        reject(this);
+                    }
+                }
+            };
+            if (data) {
+                http.send(data);
+            } else {
+                http.send();
+            }
+        });
+
+        return promise;
+    };
+
+    // update/create resource using HTTP PUT
+    var putResource = function(url, data) {
+        var promise = new Promise(function(resolve, reject) {
+            var http = new XMLHttpRequest();
+            http.open('PUT', url);
+            http.setRequestHeader('Content-Type', 'text/turtle');
+            http.withCredentials = true;
+            http.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    if (this.status === 200 || this.status === 201) {
+                        var res = {};
+                        // get Location
+                        res.url = this.getResponseHeader('Location');
                         var h = parseLinkHeader(this.getResponseHeader('Link'));
                         res.acl = h['acl'];
                         res.meta = (h['meta'])?h['meta']:h['describedBy'];
@@ -241,6 +273,7 @@ Solid = (function(window) {
         getResouce: getResouce,
         getWebIDProfile: getWebIDProfile,
         resourceStatus: resourceStatus,
-        newResource: newResource
+        newResource: newResource,
+        putResource: putResource
     };
 }(this));

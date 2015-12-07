@@ -27,6 +27,9 @@ Plume = (function (window, document) {
     var UI = $rdf.Namespace("http://www.w3.org/ns/ui#");
     var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
     var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
+    var MBLOG = $rdf.Namespace("http://www.w3.org/ns/mblog#");
+    var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
+    var TAGS = $rdf.Namespace("http://www.holygoat.co.uk/owl/redwood/0.1/tags/");
 
     // init markdown editor
     var editor = new SimpleMDE({
@@ -83,6 +86,11 @@ Plume = (function (window, document) {
         document.querySelector('.blog-title').innerHTML = config.title;
         document.querySelector('.blog-tagline').innerHTML = config.tagline;
 
+        // append trailing slash to data path if missing
+        if (config.dataPath.lastIndexOf('/') < 0) {
+            config.dataPath += '/';
+        }
+
         // Get the current user
         Solid.getUserFromURL(appURL).then(function(webid){
             if (webid.length === 0) {
@@ -106,7 +114,6 @@ Plume = (function (window, document) {
                                 if (res.url && res.url.length > 0) {
                                     config.dataContainer = res.url;
                                 }
-                                console.log(config);
                             }
                         )
                         .catch(
@@ -115,6 +122,8 @@ Plume = (function (window, document) {
                                 notify('error', 'Could not create data container');
                             }
                         );
+                    } else if (container.exists) {
+                        config.dataContainer = appURL+config.dataPath;
                     }
                 }
             );
@@ -401,7 +410,6 @@ Plume = (function (window, document) {
 
     var publishPost = function(url) {
         var post = {};
-        post.url = (url && url.length>0)?url:user.webid+document.querySelector('.editor-title').innerHTML;
         post.title = document.querySelector('.editor-title').innerHTML;
         post.author = user.webid;
         post.date = document.querySelector('.editor-date').innerHTML;
@@ -416,27 +424,25 @@ Plume = (function (window, document) {
                 post.tags.push(tag);
             }
         }
-        posts[post.url] = post;
-        // create post dom element
-        var article = addPostToDom(post);
-        // select element holding all the posts
-        var postsdiv = document.querySelector('.posts');
-        if (url) {
-            var self = document.getElementById(url);
-            self.parentNode.replaceChild(article, self);
-        } else if (postsdiv.hasChildNodes()) {
-            var first = postsdiv.childNodes[0];
-            postsdiv.insertBefore(article, first);
-        } else {
-            postsdiv.appendChild(article);
-        }
 
-        // do not save the default post
-        if (post.url == 'https://example.org/') {
-            resetAll();
-            return;
-        } else {
-            // Write data to server
+        // this is called after the post data is done writing to the server
+        var updateLocal = function(location) {
+            post.url = location;
+            posts[post.url] = post;
+            // select element holding all the posts
+            var postsdiv = document.querySelector('.posts');
+            // add/update post element
+            var article = addPostToDom(post);
+
+            if (url) {
+                var self = document.getElementById(url);
+                self.parentNode.replaceChild(article, self);
+            } else if (postsdiv.hasChildNodes()) {
+                var first = postsdiv.childNodes[0];
+                postsdiv.insertBefore(article, first);
+            } else {
+                postsdiv.appendChild(article);
+            }
 
             // fade out to indicate new content
             article.scrollIntoView(true);
@@ -446,6 +452,41 @@ Plume = (function (window, document) {
                 article.style.background = "transparent";
             }, 500);
             resetAll();
+        };
+
+        // do not save the default post
+        if (post.url == 'https://example.org/') {
+            resetAll();
+            return;
+        } else {
+            // Write data to server
+            //TODO also write tags
+            var g = new $rdf.graph();
+            g.add($rdf.sym('#this'), RDF('type'), SIOC('Post'));
+            g.add($rdf.sym('#this'), DCT('title'), $rdf.lit(post.title));
+            g.add($rdf.sym('#this'), MBLOG('author'), $rdf.sym(post.author));
+            g.add($rdf.sym('#this'), DCT('created'), $rdf.lit(moment(Date.now()).utcOffset('00:00').format("YYYY-MM-DDTHH:mm:ssZ"), '', $rdf.Symbol.prototype.XSDdateTime));
+            g.add($rdf.sym('#this'), SIOC('content'), $rdf.lit(encodeHTML(post.body)));
+
+            var triples = new $rdf.Serializer(g).toN3(g);
+
+            if (url) {
+                var writer = Solid.putResource(url, triples);
+            } else {
+                var slug = post.title.toLowerCase().replace(/ /g, '-');
+                var writer = Solid.newResource(config.dataContainer, slug, triples);
+            }
+            writer.then(
+                function(res) {
+                    updateLocal(res.url);
+                }
+            )
+            .catch(
+                function(err) {
+                    console.log(err);
+                    resetAll();
+                }
+            );
         }
     };
 
@@ -554,7 +595,7 @@ Plume = (function (window, document) {
         // create body
         var body = document.createElement('section');
         body.classList.add('post-body');
-        body.innerHTML = parseMD(post.body);
+        body.innerHTML = parseMD(decodeHTML(post.body));
         // append body to article
         article.appendChild(body);
 
@@ -634,6 +675,24 @@ Plume = (function (window, document) {
         text.innerHTML = (text.innerHTML=="Preview")?"Edit":"Preview";
     };
 
+    // escape HTML code
+    var encodeHTML = function (html) {
+        return html
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    };
+
+    var decodeHTML = function (html) {
+        return html
+            .replace(/&amp;/g, "&")
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&quot;/g, "\"")
+            .replace(/&#039;/g, "'");
+    };
 
 
     // start app
