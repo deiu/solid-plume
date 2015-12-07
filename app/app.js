@@ -69,18 +69,20 @@ Plume = (function (window, document) {
     var posts = {};
     var authors = {};
 
+    var appURL = window.location.origin+window.location.pathname;
+
     // Initializer
     var init = function() {
-        document.querySelector('.blog-picture').src = user.picture;
-        document.querySelector('.blog-title').innerHTML = user.title;
-        document.querySelector('.blog-tagline').innerHTML = user.tagline;
+        Solid.getUserFromURL(appURL).then(function(user){
+            if (user.length === 0) {
+                document.querySelector('.blog-picture').src = user.picture;
+                document.querySelector('.blog-title').innerHTML = user.title;
+                document.querySelector('.blog-tagline').innerHTML = user.tagline;
+            } else {
+                // fetch profile
+            }
+        });
 
-        var getUser = function() {
-            return new Promise(function(resolve){
-                //@@@
-                resolve();
-            });
-        };
 
         // select element holding all the posts
         var postsdiv = document.querySelector('.posts');
@@ -642,6 +644,6 @@ Plume = (function (window, document) {
         confirmDelete: confirmDelete,
         deletePost: deletePost,
         togglePreview: togglePreview
-    }
+    };
 
 }(this, this.document));
