@@ -69,10 +69,11 @@ Solid = (function(window) {
     // fetch user profile (follow sameAs links) and return promise with a graph
     var getWebIDProfile = function(uri) {
         var promise = new Promise(function(resolve) {
-	    	var retGraph = new $rdf.graph();
+
 	    	// Load main profile
 	    	getResouce(uri).then(
     			function(graph) {
+    				// find additional resources to load
 					var sameAs = graph.statementsMatching($rdf.sym(uri), OWL('sameAs'), undefined);
                     var seeAlso = graph.statementsMatching($rdf.sym(uri), OWL('seeAlso'), undefined);
                     var prefs = graph.statementsMatching($rdf.sym(uri), PIM('preferencesFile'), undefined);
@@ -82,7 +83,7 @@ Solid = (function(window) {
     				var checkAll = function() {
     					console.log("Left to load: "+toLoad);
     					if (toLoad === 0) {
-    						resolve(retGraph);
+    						resolve(graph);
     					}
     				}
     				// Load sameAs files
@@ -91,7 +92,7 @@ Solid = (function(window) {
                         	console.log("Loading "+same.object.value);
                             getResouce(same.object.value).then(
                             	function(g) {
-                            		addGraph(retGraph, g);
+                            		addGraph(graph, g);
                             		toLoad--;
                             		checkAll();
                             	}
@@ -108,7 +109,7 @@ Solid = (function(window) {
                         	console.log("Loading "+see.object.value);
                             getResouce(see.object.value).then(
                             	function(g) {
-                            		addGraph(retGraph, g);
+                            		addGraph(graph, g);
                             		toLoad--;
                             		checkAll();
                             	}
@@ -125,7 +126,7 @@ Solid = (function(window) {
                         	console.log("Loading "+pref.object.value);
                             getResouce(pref.object.value).then(
                             	function(g) {
-                            		addGraph(retGraph, g);
+                            		addGraph(graph, g);
                             		toLoad--;
                             		checkAll();
                             	}

@@ -6,6 +6,12 @@ Plume = (function (window, document) {
     'use strict';
 
     // Init some defaults;
+    var config = {
+        title: "/dev/solid",
+        tagline: "Rocking the Solid Web",
+        picture: "img/logo-white.svg"
+    }
+    // RDF
     var PROXY = "https://databox.me/proxy?uri={uri}";
     var TIMEOUT = 5000;
 
@@ -58,12 +64,9 @@ Plume = (function (window, document) {
     }
 
     var user = {
-            title: "/dev/solid",
-            tagline: "Rocking the Solid Web",
-            picture: "img/logo-white.svg",
-            name: "John Doe",
-            webid: "https://example.org/user#me",
-            avatar: "img/icon-blue.svg"
+        name: "John Doe",
+        webid: "https://example.org/user#me",
+        picture: "img/icon-blue.svg"
     };
 
     var posts = {};
@@ -73,16 +76,22 @@ Plume = (function (window, document) {
 
     // Initializer
     var init = function() {
-        Solid.getUserFromURL(appURL).then(function(user){
-            if (user.length === 0) {
-                document.querySelector('.blog-picture').src = user.picture;
-                document.querySelector('.blog-title').innerHTML = user.title;
-                document.querySelector('.blog-tagline').innerHTML = user.tagline;
-            } else {
-                // fetch profile
+        // Set default config values
+        document.querySelector('.blog-picture').src = config.picture;
+        document.querySelector('.blog-title').innerHTML = config.title;
+        document.querySelector('.blog-tagline').innerHTML = config.tagline;
+
+        // Get the current user
+        Solid.getUserFromURL(appURL).then(function(webid){
+            if (webid.length === 0) {
+                console.log("Could not find WebID from User header, or user is not authenticated. Got: "+webid);
+            } else if (webid.slice(0, 4) == 'http') {
+                // fetch and set user profile
+                Solid.getWebIDProfile(webid).then(function(g) {
+                    setUser(webid, g);
+                });
             }
         });
-
 
         // select element holding all the posts
         var postsdiv = document.querySelector('.posts');
@@ -100,7 +109,7 @@ Plume = (function (window, document) {
                 title: "Welcome to Plume, a Solid blogging platform",
                 author: "https://example.org/user#me",
                 date: "3 Dec 2015",
-                body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), which decouples data from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article. You won't be able to save it however.\n\nGive it a try, write your first post!",
+                body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article. You won't be able to save it however.\n\nGive it a try, write your first post!",
                 tags: [
                     { color: "#df2d4f", name: "Decentralization" },
                     { color: "#4d85d1", name: "Solid" }
@@ -139,6 +148,43 @@ Plume = (function (window, document) {
 
         // Scroll handler to toggle classes.
         window.addEventListener('scroll', stickyScroll, false);
+    };
+
+    // set the current user
+    var setUser = function(webid, g) {
+        // name: "John Doe",
+        // webid: "https://example.org/user#me",
+        // picture: "img/icon-blue.svg"
+
+        // set WebID
+        user.webid = webid;
+
+        var webidRes = $rdf.sym(webid);
+
+        // set name
+        var name = g.any(webidRes, FOAF('name'));
+        if (!name || name.value.length == 0) {
+            name = '';
+        }
+        user.name = name.value;
+
+        // set picture
+        var pic, img = g.any(webidRes, FOAF('img'));
+        if (img) {
+            pic = img;
+        } else {
+            // check if profile uses depic instead
+            var depic = g.any(webidRes, FOAF('depiction'));
+            if (depic) {
+                pic = depic;
+            }
+        }
+        if (pic && pic.value.length > 0) {
+            user.picture = pic.value;
+        }
+
+        // add user to authors list
+        authors[webid] = user;
     };
 
     var confirmDelete = function(url) {
@@ -208,22 +254,6 @@ Plume = (function (window, document) {
         back.setAttribute('onclick', 'Plume.resetAll()');
         back.innerHTML = '≪ Go back';
         buttonList.appendChild(back);
-        // if (user.webid == posts[url].author) {
-        //     // edit button
-        //     var edit = document.createElement('button');
-        //     edit.classList.add("button");
-        //     edit.setAttribute('onclick', 'Plume.showEditor(\''+url+'\')');
-        //     edit.innerHTML = 'Edit';
-        //     buttonList.appendChild(edit);
-        //     // delete button
-        //     var del = document.createElement('button');
-        //     del.classList.add('button');
-        //     del.classList.add('danger');
-        //     del.classList.add('float-right');
-        //     del.setAttribute('onclick', 'Plume.confirmDelete(\''+url+'\')');
-        //     del.innerHTML = 'Delete';
-        //     buttonList.appendChild(del);
-        // }
         // append button list to viewer
         footer.appendChild(buttonList);
         // hide main page
@@ -317,7 +347,6 @@ Plume = (function (window, document) {
 
     var setColor = function(color) {
         document.querySelector('.color-picker').style.background = window.getComputedStyle(document.querySelector('.'+color), null).backgroundColor;
-        // document.querySelector('.color-picker').classList.add(color);
         document.querySelector('.pure-menu-active').classList.remove('pure-menu-active');
         document.querySelector('.editor-add-tag').focus();
     };
@@ -392,59 +421,6 @@ Plume = (function (window, document) {
             resetAll();
         }
     };
-
-    // var posts = {
-    //     "https://example.org/post1": {
-    //         url: "https://example.org/post1",
-    //         title: "Introducing Solid",
-    //         author: "https://deiu.me/profile#me",
-    //         date: "4 Dec 2015",
-    //         body: "![test](https://deiu.me/avatar.jpg) \n\n```\nvar publish = function() {\n  console.log(bodyValue()); \n};\n```\n",
-    //         tags: [
-    //             { color: "#5aba59", name: "JS" },
-    //             { color: "#4d85d1", name: "Solid" }
-    //         ]
-    //     },
-    //     "https://example.org/post2": {
-    //         url: "https://example.org/post2",
-    //         title: "Everything You Need to Know About Solid",
-    //         author: "https://deiu.me/profile#me",
-    //         date: "3 Dec 2015",
-    //         body: "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
-    //         tags: [
-    //             { color: "#df2d4f", name: "Linked Data" },
-    //             { color: "#4d85d1", name: "Solid" }
-    //         ]
-    //     },
-    //     "https://example.org/post3": {
-    //         url: "https://example.org/post3",
-    //         title: "Photos from CSSConf and JSConf",
-    //         author: "https://deiu.me/profile#me",
-    //         date: "1 Dec 2015",
-    //         body: '<img src="https://deiu.me/Public/stata-background.png">',
-    //         tags: [
-
-    //         ]
-    //     },
-    //     "https://example.org/post4": {
-    //         url: "https://example.org/post4",
-    //         title: "Rdflib.js 0.9 Released",
-    //         author: "https://user/profile#me",
-    //         date: "24 Nov 2015",
-    //         body: "We are happy to announce the release of Rdflib.js 0.9! You can find it now on github, download it directly, or pull it in via npm. We’ve also updated the Solid spec with the latest documentation.",
-    //         tags: [
-    //             { color: "#8156a7", name: "Other" }
-    //         ]
-    //     }
-    // };
-
-    // var authors = {
-    //     "https://deiu.me/profile#me": {
-    //         name: "Andrei Sambra",
-    //         picture: "https://deiu.me/avatar.jpg"
-    //     },
-    //     "https://user/profile#me": {}
-    // };
 
     var getAuthorByWebID = function(webid) {
         var name = 'Unknown';
