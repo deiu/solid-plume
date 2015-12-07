@@ -7,6 +7,7 @@ Plume = (function (window, document) {
 
     // Init some defaults
     var config = {
+        owner: '',
         title: "/dev/solid",
         tagline: "Rocking the Solid Web",
         picture: "img/logo-white.svg",
@@ -100,8 +101,16 @@ Plume = (function (window, document) {
             } else if (webid.slice(0, 4) == 'http') {
                 // fetch and set user profile
                 Solid.getWebIDProfile(webid).then(function(g) {
-                    setUser(webid, g);
-                    initContainer();
+                    getUserProfile(webid, g).then(function(profile){
+                        // set WebID
+                        user.webid = profile.webid;
+                        user.name = profile.name;
+                        user.picture = profile.picture;
+                        // add self to authors list
+                        authors[webid] = user;
+
+                        initContainer();
+                    });
                 });
             }
         });
@@ -183,40 +192,53 @@ Plume = (function (window, document) {
     }
 
     // set the current user
-    var setUser = function(webid, g) {
+    var getUserProfile = function(webid, g) {
         // name: "John Doe",
         // webid: "https://example.org/user#me",
         // picture: "img/icon-blue.svg"
 
-        // set WebID
-        user.webid = webid;
+        var promise = new Promise(function(resolve){
+            var profile = {};
+            var webidRes = $rdf.sym(webid);
+            // set webid
+            profile.webid = webid;
 
-        var webidRes = $rdf.sym(webid);
-
-        // set name
-        var name = g.any(webidRes, FOAF('name'));
-        if (!name || name.value.length == 0) {
-            name = '';
-        }
-        user.name = name.value;
-
-        // set picture
-        var pic, img = g.any(webidRes, FOAF('img'));
-        if (img) {
-            pic = img;
-        } else {
-            // check if profile uses depic instead
-            var depic = g.any(webidRes, FOAF('depiction'));
-            if (depic) {
-                pic = depic;
+            // set name
+            var name = g.any(webidRes, FOAF('name'));
+            if (name && name.value.length > 0) {
+                profile.name = name.value;
+            } else {
+                profile.name = '';
+                // familyName and givenName
+                var givenName = g.any(webidRes, FOAF('familyName'));
+                if (givenName) {
+                    profile.name += givenName.value;
+                }
+                var familyName = g.any(webidRes, FOAF('familyName'));
+                if (familyName) {
+                    profile.name += (givenName)?' '+familyName.value:familyName.value;
+                }
             }
-        }
-        if (pic && pic.value.length > 0) {
-            user.picture = pic.value;
-        }
 
-        // add user to authors list
-        authors[webid] = user;
+            // set picture
+            var pic, img = g.any(webidRes, FOAF('img'));
+            if (img) {
+                pic = img;
+            } else {
+                // check if profile uses depic instead
+                var depic = g.any(webidRes, FOAF('depiction'));
+                if (depic) {
+                    pic = depic;
+                }
+            }
+            if (pic && pic.uri.length > 0) {
+                profile.picture = pic.uri;
+            }
+
+            resolve(profile);
+        });
+
+        return promise;
     };
 
     var confirmDelete = function(url) {
@@ -438,6 +460,20 @@ Plume = (function (window, document) {
         savePost(post, url);
     };
 
+    // update author details with more recent data
+    var updateAuthorInfo = function(webid) {
+        // check if self first
+        if (webid == user.webid) {
+            return;
+        }
+
+        getUserProfile(webid).then(
+            function(profile) {
+                authors[webid] = profile;
+            }
+        );
+    };
+
     // save post data to server
     var savePost = function(post, url) {
         // this is called after the post data is done writing to the server
@@ -532,8 +568,6 @@ Plume = (function (window, document) {
                                 var subject = p.subject;
                                 var post = { url: subject.uri };
 
-                                // g.add($rdf.sym('#this'), SIOC('content'), $rdf.lit(encodeHTML(post.body)));
-
                                 // add title
                                 var title = g.any(subject, DCT('title'));
                                 if (title && title.value) {
@@ -556,10 +590,14 @@ Plume = (function (window, document) {
                                     if (picture) {
                                         author.picture = encodeHTML(picture.uri);
                                     }
-                                    // add to list of authors
-                                    authors[post.author] = author;
+
+                                    // add to list of authors if not self
+                                    if (post.author != user.webid) {
+                                        authors[post.author] = author;
+                                    }
 
                                     // update author info with fresh data
+                                    updateAuthorInfo(post.author, url);
                                 }
 
                                 // add date
