@@ -309,7 +309,7 @@ Plume = (function (window, document) {
 
     var showViewer = function(url) {
         var viewer = document.querySelector('.viewer');
-        var article = addPostToDom(posts[url]);
+        var article = postToHTML(posts[url]);
         if (!article) {
             resetAll();
             return;
@@ -511,7 +511,7 @@ Plume = (function (window, document) {
             // select element holding all the posts
             var postsdiv = document.querySelector('.posts');
             // add/update post element
-            var article = addPostToDom(post);
+            var article = postToHTML(post);
 
             if (url) {
                 var self = document.getElementById(url);
@@ -592,8 +592,31 @@ Plume = (function (window, document) {
                     fetchPost(url).then(
                         function(post) {
                             // add post to dom
-                            var article = addPostToDom(post);
+                            var article = postToHTML(post);
+
+                            // add more button
+                            var more = document.createElement('a');
+                            more.classList.add("action-button");
+                            more.setAttribute('onclick', 'Plume.showViewer(\''+post.url+'\')');
+                            more.setAttribute('title', 'View full');
+                            more.innerHTML = 'View full';
+                            article.querySelector('footer').insertBefore(more, article.querySelector('footer').firstChild);
+
+                            // append to dom
                             postsdiv.appendChild(article);
+
+                            // get element current height
+                            var section = document.getElementById(post.url).querySelector('section');
+                            var height = section.offsetHeight;
+
+                            // fade post contents if post is too long
+                            if (height > 250) {
+                                section.classList.add('less');
+                                var fade = document.createElement('div');
+                                fade.classList.add('fade-bottom');
+                                article.insertBefore(fade, article.querySelector('footer'));
+                            }
+
                         }
                     );
                 });
@@ -692,7 +715,7 @@ Plume = (function (window, document) {
         return {name: name, picture: picture};
     };
 
-    var addPostToDom = function(post) {
+    var postToHTML = function(post) {
         // change separator: <h1 class="content-subhead">Recent Posts</h1>
         if (!post) {
             return;

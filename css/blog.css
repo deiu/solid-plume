@@ -92,6 +92,9 @@ h3 {
 .blog-picture {
     margin: 0;
 }
+.blog-title {
+    color: #fff;
+}
 
 .blog-tagline {
     font-weight: 300;
@@ -488,6 +491,39 @@ a.editor-author, a.editor-author:visited {
     -ms-transition: background-color 1.5s linear;
 }
 
+.fade-bottom {
+    position: relative;
+    bottom: 4em;
+    height: 4em;
+    margin-bottom: -2em;
+    background: -webkit-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+    background-image: -moz-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+    background-image: -o-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+    background-image: linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+    background-image: -ms-linear-gradient(
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+    );
+}
+
+.less {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 300px!important;
+}
+
 pre {
     background: #F9F9F9;
 }
@@ -555,6 +591,10 @@ pre {
 
 .underline:hover {
     text-decoration: underline;
+}
+
+.no-decoration, .no-decoration:hover, .no-decoration:visited {
+    text-decoration: none;
 }
 
 .start a {
