@@ -209,7 +209,7 @@ Plume = (function (window, document) {
                 profile.name = name.value;
             } else {
                 profile.name = '';
-                // familyName and givenName
+                // use familyName and givenName instead of full name
                 var givenName = g.any(webidRes, FOAF('familyName'));
                 if (givenName) {
                     profile.name += givenName.value;
@@ -217,6 +217,13 @@ Plume = (function (window, document) {
                 var familyName = g.any(webidRes, FOAF('familyName'));
                 if (familyName) {
                     profile.name += (givenName)?' '+familyName.value:familyName.value;
+                }
+                // use nick
+                if (!givenName && !familyName) {
+                    var nick = g.any(webidRes, FOAF('nick'));
+                    if (nick) {
+                        profile.name = nick.value;
+                    }
                 }
             }
 
