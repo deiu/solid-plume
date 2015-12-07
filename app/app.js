@@ -5,12 +5,13 @@ var Plume = Plume || {};
 Plume = (function (window, document) {
     'use strict';
 
-    // Init some defaults;
+    // Init some defaults
     var config = {
         title: "/dev/solid",
         tagline: "Rocking the Solid Web",
         picture: "img/logo-white.svg",
-        dataPath: 'posts'
+        dataPath: 'posts',
+        dataContainer: ''
     }
 
     // RDF
@@ -139,7 +140,7 @@ Plume = (function (window, document) {
 
     // Init data container
     var initContainer = function() {
-        if (!config.dataContainer) {
+        if (config.dataContainer.length === 0) {
             Solid.resourceStatus(appURL+config.dataPath).then(
                 function(container) {
                     // create data container for posts if it doesn't exist
@@ -154,7 +155,7 @@ Plume = (function (window, document) {
                                     title: "Welcome to Plume, a Solid blogging platform",
                                     author: user.webid,
                                     date: "3 Dec 2015",
-                                    body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post created under your name. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article. You won't be able to save it however.\n\nGive it a try, write your first post!",
+                                    body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post created under your name. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article.\n\nGive it a try, write your first post!",
                                     tags: [
                                         { color: "#df2d4f", name: "Decentralization" },
                                         { color: "#4d85d1", name: "Solid" }
