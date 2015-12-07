@@ -98,7 +98,6 @@ Plume = (function (window, document) {
                 // fetch and set user profile
                 Solid.getWebIDProfile(webid).then(function(g) {
                     getUserProfile(webid, g).then(function(profile){
-                        console.log("authenticated user "+webid);
                         // set WebID
                         user.webid = profile.webid;
                         user.name = profile.name;
@@ -108,7 +107,6 @@ Plume = (function (window, document) {
 
                         // add new post button if owner
                         if (config.owner == user.webid) {
-                            console.log("Is owner");
                             document.querySelector('.nav').classList.remove('hidden');
                         }
 
@@ -589,7 +587,6 @@ Plume = (function (window, document) {
                     document.querySelector('.start').classList.remove('hidden');
                 }
                 statements.forEach(function(s){
-                    console.log("Fetching post "+s.object.uri);
                     var url = s.object.uri;
 
                     fetchPost(url).then(

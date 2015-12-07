@@ -92,10 +92,8 @@ Solid = (function(window) {
                     var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
                     var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
                     var toLoad = sameAs.length + seeAlso.length + prefs.length;
-                    console.log("To WebID profiles to load: "+toLoad);
 
                     var checkAll = function() {
-                        console.log("Profiles left to load: "+toLoad);
                         if (toLoad === 0) {
                             resolve(graph);
                         }
@@ -103,7 +101,6 @@ Solid = (function(window) {
                     // Load sameAs files
                     if (sameAs.length > 0) {
                         sameAs.forEach(function(same){
-                            console.log("Loading "+same.object.value);
                             getResource(same.object.value, same.object.value).then(
                                 function(g) {
                                     addGraph(graph, g);
@@ -120,7 +117,6 @@ Solid = (function(window) {
                     // Load seeAlso files
                     if (seeAlso.length > 0) {
                         seeAlso.forEach(function(see){
-                            console.log("Loading "+see.object.value);
                             getResource(see.object.value).then(
                                 function(g) {
                                     addGraph(graph, g, see.object.value);
@@ -137,7 +133,6 @@ Solid = (function(window) {
                     // Load preferences files
                     if (prefs.length > 0) {
                         prefs.forEach(function(pref){
-                            console.log("Loading "+pref.object.value);
                             getResource(pref.object.value).then(
                                 function(g) {
                                     addGraph(graph, g, pref.object.value);
