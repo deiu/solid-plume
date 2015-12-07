@@ -5,15 +5,7 @@ var Plume = Plume || {};
 Plume = (function (window, document) {
     'use strict';
 
-    // Init some defaults
-    var config = {
-        owner: '',
-        title: "/dev/solid",
-        tagline: "Rocking the Solid Web",
-        picture: "img/logo-white.svg",
-        dataPath: 'posts',
-        dataContainer: ''
-    }
+    var config = Plume.config || {};
 
     // RDF
     var PROXY = "https://databox.me/,proxy?uri={uri}";
@@ -89,8 +81,8 @@ Plume = (function (window, document) {
         document.querySelector('.blog-tagline').innerHTML = config.tagline;
 
         // append trailing slash to data path if missing
-        if (config.dataPath.lastIndexOf('/') < 0) {
-            config.dataPath += '/';
+        if (config.defaultPath.lastIndexOf('/') < 0) {
+            config.defaultPath += '/';
         }
 
         // Get the current user
@@ -108,6 +100,11 @@ Plume = (function (window, document) {
                         user.picture = profile.picture;
                         // add self to authors list
                         authors[webid] = user;
+
+                        // add new post button if owner
+                        if (config.owner == webid) {
+                            document.querySelector('.nav').classList.remove('hidden');
+                        }
 
                         initContainer();
                     });
@@ -150,11 +147,11 @@ Plume = (function (window, document) {
     // Init data container
     var initContainer = function() {
         if (config.dataContainer.length === 0) {
-            Solid.resourceStatus(appURL+config.dataPath).then(
+            Solid.resourceStatus(appURL+config.defaultPath).then(
                 function(container) {
                     // create data container for posts if it doesn't exist
                     if (!container.exists && container.err === null) {
-                        Solid.newResource(appURL, config.dataPath, null, true).then(
+                        Solid.newResource(appURL, config.defaultPath, null, true).then(
                             function(res) {
                                 if (res.url && res.url.length > 0) {
                                     config.dataContainer = res.url;
@@ -181,7 +178,7 @@ Plume = (function (window, document) {
                             }
                         );
                     } else if (container.exists) {
-                        config.dataContainer = appURL+config.dataPath;
+                        config.dataContainer = appURL+config.defaultPath;
                         fetchPosts();
                     }
                 }
@@ -191,15 +188,16 @@ Plume = (function (window, document) {
         }
     }
 
-    // set the current user
+    // get profile data for a given user
+    // Returns
+    // webid: "https://example.org/user#me"
+    // name: "John Doe",
+    // picture: "https://example.org/profile.png"
     var getUserProfile = function(webid, g) {
-        // name: "John Doe",
-        // webid: "https://example.org/user#me",
-        // picture: "img/icon-blue.svg"
-
         var promise = new Promise(function(resolve){
             var profile = {};
             var webidRes = $rdf.sym(webid);
+
             // set webid
             profile.webid = webid;
 
