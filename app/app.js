@@ -88,7 +88,7 @@ Plume = (function (window, document) {
         // Get the current user
         Solid.isAuthenticated(appURL).then(function(webid){
             if (webid.length === 0) {
-                console.log("Could not find WebID from User header, or user is not authenticated. Got: "+webid);
+                console.log("Could not find WebID from User header, or user is not authenticated.");
                 initContainer();
             } else if (webid.slice(0, 4) == 'http') {
                 // fetch and set user profile
@@ -472,11 +472,13 @@ Plume = (function (window, document) {
             return;
         }
 
-        getUserProfile(webid).then(
-            function(profile) {
-                authors[webid] = profile;
-            }
-        );
+        Solid.getWebIDProfile(webid).then(function(g) {
+            getUserProfile(webid, g).then(
+                function(profile) {
+                    authors[webid] = profile;
+                }
+            );
+        });
     };
 
     // save post data to server

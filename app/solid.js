@@ -51,7 +51,7 @@ Solid = (function(window) {
             var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
             f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
                 if (!ok) {
-                    reject({ok: ok, body: body, xhr: xhr});
+                    reject({ok: ok, body: body, xhr: xhr, g: g});
                 } else {
                     resolve(g);
                 }
@@ -153,7 +153,12 @@ Solid = (function(window) {
                     }
                 }
             )
-            .catch();
+            .catch(
+                function(err) {
+                    console.log("No user: "+g);
+                    resolve(err.g);
+                }
+            );
         });
 
         return promise;
