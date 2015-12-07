@@ -4,7 +4,23 @@ var Plume = Plume || {};
 
 Plume = (function (window, document) {
     'use strict';
+
     // Init some defaults;
+    var PROXY = "https://databox.me/proxy?uri={uri}";
+    var TIMEOUT = 5000;
+
+    $rdf.Fetcher.crossSiteProxyTemplate = PROXY;
+    // common vocabs
+    var RDF = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    var RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+    var FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/");
+    var OWL = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
+    var PIM = $rdf.Namespace("http://www.w3.org/ns/pim/space#");
+    var UI = $rdf.Namespace("http://www.w3.org/ns/ui#");
+    var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
+    var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
+
+    // init markdown editor
     var editor = new SimpleMDE({
         status: false,
         spellChecker: false,
@@ -46,7 +62,7 @@ Plume = (function (window, document) {
             picture: "img/logo-white.svg",
             name: "John Doe",
             webid: "https://example.org/user#me",
-            avatar: "img/icon.svg"
+            avatar: "img/icon-blue.svg"
     };
 
     var posts = {};
@@ -90,7 +106,7 @@ Plume = (function (window, document) {
                 title: "Welcome to Plume, a Solid blogging platform",
                 author: "https://example.org/user#me",
                 date: "3 Dec 2015",
-                body: "This is a demo post. Feel free to remove it whenever you wish.\n\nLorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+                body: "**Note!** This is a demo post. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), which decouples data from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles.\n\nGive it a try, write your first post!",
                 tags: [
                     { color: "#df2d4f", name: "Decentralization" },
                     { color: "#4d85d1", name: "Solid" }
@@ -184,22 +200,22 @@ Plume = (function (window, document) {
         back.setAttribute('onclick', 'Plume.resetAll()');
         back.innerHTML = '≪ Go back';
         buttonList.appendChild(back);
-        if (user.webid == posts[url].author) {
-            // edit button
-            var edit = document.createElement('button');
-            edit.classList.add("button");
-            edit.setAttribute('onclick', 'Plume.showEditor(\''+url+'\')');
-            edit.innerHTML = 'Edit';
-            buttonList.appendChild(edit);
-            // delete button
-            var del = document.createElement('button');
-            del.classList.add('button');
-            del.classList.add('danger');
-            del.classList.add('float-right');
-            del.setAttribute('onclick', 'Plume.confirmDelete(\''+url+'\')');
-            del.innerHTML = 'Delete';
-            buttonList.appendChild(del);
-        }
+        // if (user.webid == posts[url].author) {
+        //     // edit button
+        //     var edit = document.createElement('button');
+        //     edit.classList.add("button");
+        //     edit.setAttribute('onclick', 'Plume.showEditor(\''+url+'\')');
+        //     edit.innerHTML = 'Edit';
+        //     buttonList.appendChild(edit);
+        //     // delete button
+        //     var del = document.createElement('button');
+        //     del.classList.add('button');
+        //     del.classList.add('danger');
+        //     del.classList.add('float-right');
+        //     del.setAttribute('onclick', 'Plume.confirmDelete(\''+url+'\')');
+        //     del.innerHTML = 'Delete';
+        //     buttonList.appendChild(del);
+        // }
         // append button list to viewer
         footer.appendChild(buttonList);
         // hide main page
@@ -414,7 +430,7 @@ Plume = (function (window, document) {
 
     var getAuthorByWebID = function(webid) {
         var name = 'Unknown';
-        var picture = 'favicon.png';
+        var picture = 'img/icon-blue.svg';
         if (webid && webid.length > 0) {
             var author = authors[webid];
             if (author && author.name) {
@@ -591,14 +607,22 @@ Plume = (function (window, document) {
         return '#'+color;
     };
 
+    var togglePreview = function() {
+        editor.togglePreview();
+        var text = document.querySelector('.preview');
+        text.innerHTML = (text.innerHTML=="Preview")?"Edit":"Preview";
+    };
+
     // return public functions
     return {
         resetAll: resetAll,
         showEditor: showEditor,
+        showViewer: showViewer,
         setColor: setColor,
         publishPost: publishPost,
         confirmDelete: confirmDelete,
-        deletePost: deletePost
+        deletePost: deletePost,
+        togglePreview: togglePreview
     }
 
 }(this, this.document));

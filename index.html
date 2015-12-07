@@ -25,7 +25,7 @@
                 <nav class="nav">
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a class="pure-button" href="#" onclick="Plume.showEditor()"><img src="img/logo-white.svg"><span>New post</span></a>
+                        <a class="pure-button" href="#" onclick="Plume.showEditor()"><span>New post</span></a>
                     </li>
                 </ul>
             </nav>
@@ -62,7 +62,8 @@
                     </section>
                     <footer>
                         <button class="button publish success" onclick="Plume.publishPost()">Publish</button>
-                        <button class="button" onclick="Plume.resetAll()">Cancel</button>
+                        <button class="button preview" onclick="Plume.togglePreview()">Preview</button>
+                        <button class="button float-right" onclick="Plume.resetAll()">Cancel</button>
                     </footer>
                 </div>
 
@@ -93,6 +94,7 @@
 <script src="js/simplemde.min.js"></script>
 <script src="js/moment.min.js"></script>
 <script src="js/dropdown.js"></script>
+<script src="js/rdflib.min.js"></script>
 <script src="app/app.js"></script>
 </body>
 </html>
