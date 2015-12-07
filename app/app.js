@@ -210,6 +210,7 @@ Plume = (function (window, document) {
 
             // set name
             var name = g.any(webidRes, FOAF('name'));
+            console.log("Name: "+name);
             if (name && name.value.length > 0) {
                 profile.name = name.value;
             } else {
@@ -246,6 +247,8 @@ Plume = (function (window, document) {
             if (pic && pic.uri.length > 0) {
                 profile.picture = pic.uri;
             }
+
+            console.log(profile);
 
             resolve(profile);
         });
