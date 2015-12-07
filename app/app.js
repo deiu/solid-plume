@@ -15,7 +15,7 @@ Plume = (function (window, document) {
     }
 
     // RDF
-    var PROXY = "https://databox.me/proxy?uri={uri}";
+    var PROXY = "https://databox.me/,proxy?uri={uri}";
     var TIMEOUT = 5000;
 
     $rdf.Fetcher.crossSiteProxyTemplate = PROXY;
