@@ -103,6 +103,7 @@ Plume = (function (window, document) {
                         user.picture = profile.picture;
                         // add self to authors list
                         authors[webid] = user;
+                        console.log(user);
 
                         // add new post button if owner
                         if (config.owner == webid) {
@@ -529,7 +530,6 @@ Plume = (function (window, document) {
         g.add($rdf.sym('#author'), FOAF('name'), $rdf.lit(authors[post.author].name));
         g.add($rdf.sym('#author'), SIOC('avatar'), $rdf.sym(authors[post.author].picture));
 
-        console.log(g.toN3());
         var triples = new $rdf.Serializer(g).toN3(g);
 
         if (url) {
