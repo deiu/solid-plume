@@ -659,7 +659,7 @@ appears on the left side of the page.
      margin: 0;
      color: #333;
      text-align: center;
-     padding: 2.5em 2em 0;
+     padding: 2em 2em 0 2em;
      border-bottom: 1px solid #eee;
  }
 .header h1 {

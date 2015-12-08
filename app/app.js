@@ -329,7 +329,17 @@ Plume = (function (window, document) {
         var viewer = document.querySelector('.viewer');
         var article = postToHTML(posts[url]);
         if (!article) {
-            resetAll();
+            fetchPost(url).then(
+                function(post) {
+                    // convert post to HTML
+                    posts[url] = post;
+                    showViewer(url);
+                }
+            ).catch(
+                function(err) {
+                    console.log(err);
+                }
+            );
             return;
         }
         // append article
