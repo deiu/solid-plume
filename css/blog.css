@@ -686,15 +686,24 @@ nav#global-nav ul li a {
     background-color: #474747;
     color: #fff;
     text-decoration: none;
+    font-size: 1.2em;
+    font-weight: 200;
+    letter-spacing: 1px;
     border: 0;
     margin-right: 0;
-    padding: 1.5em 0 1.5em 2em;
+    padding: 1em;
 }
 nav#global-nav ul li a:hover, nav#global-nav ul li a:focus {
   background-color: #474747;
 }
 nav#global-nav ul li a:active {
   color: #9fbf00;
+}
+nav#global-nav img {
+    position: relative;
+    color: #fff;
+    height: 30px;
+    top: 7px;
 }
 
 /* Menu button */
