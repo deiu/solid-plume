@@ -353,7 +353,7 @@ Plume = (function (window, document) {
         // create button list
         var buttonList = document.createElement('div');
         var back = document.createElement('button');
-        back.classList.add("button");
+        back.classList.add("action-button");
         back.setAttribute('onclick', 'Plume.resetAll()');
         back.innerHTML = '≪ Go back';
         buttonList.appendChild(back);
@@ -1014,6 +1014,7 @@ Plume = (function (window, document) {
         setColor: setColor,
         publishPost: publishPost,
         confirmDelete: confirmDelete,
+        cancelDelete: cancelDelete,
         deletePost: deletePost,
         togglePreview: togglePreview
     };
