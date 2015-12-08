@@ -512,16 +512,28 @@ Plume = (function (window, document) {
     };
 
     // update author details with more recent data
-    var updateAuthorInfo = function(webid) {
+    // TODO add date of last update to avoid repeated fetches
+    var updateAuthorInfo = function(webid, url) {
         // check if self first
-        if (webid == user.webid) {
+        if (webid == user.webid || authors[webid].updated) {
             return;
         }
-
         Solid.getWebIDProfile(webid).then(function(g) {
             getUserProfile(webid, g).then(
                 function(profile) {
+                    profile.updated = true;
                     authors[webid] = profile;
+                    if (url && posts[url]) {
+                        var postId = document.getElementById(url);
+                        if (profile.name) {
+                            postId.querySelector('.post-author').innerHTML = profile.name;
+                            postId.querySelector('.post-avatar').title = profile.name+"'s picture";
+                            postId.querySelector('.post-avatar').alt = profile.name+"'s picture";
+                        }
+                        if (profile.picture) {
+                            postId.querySelector('.post-avatar').src = profile.picture;
+                        }
+                    }
                 }
             );
         });
@@ -697,9 +709,9 @@ Plume = (function (window, document) {
                         }
 
                         // add author
+                        var author = {};
                         var creator = g.any(subject, SIOC('has_creator'));
                         if (creator) {
-                            var author = {};
                             var accountOf = g.any(creator, SIOC('account_of'));
                             if (accountOf) {
                                 post.author = encodeHTML(accountOf.uri);
@@ -712,13 +724,18 @@ Plume = (function (window, document) {
                             if (picture) {
                                 author.picture = encodeHTML(picture.uri);
                             }
-
-                            // add to list of authors if not self
-                            if (post.author != user.webid) {
-                                authors[post.author] = author;
+                        } else {
+                            creator = g.any(subject, DCT('creator'));
+                            if (creator) {
+                                post.author = encodeHTML(creator.uri);
                             }
-
-                            // update author info with fresh data
+                        }
+                        // add to list of authors if not self
+                        if (post.author && post.author != user.webid) {
+                            authors[post.author] = author;
+                        }
+                        // update author info with fresh data
+                        if (post.author && post.author.length >0) {
                             updateAuthorInfo(post.author, url);
                         }
 
