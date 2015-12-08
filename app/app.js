@@ -133,22 +133,24 @@ Plume = (function (window, document) {
         menuLink = document.getElementById('menuLink');
 
         function toggleClass(element, className) {
-            var classes = element.className.split(/\s+/),
-                length = classes.length,
-                i = 0;
+            if (element.className) {
+                var classes = element.className.split(/\s+/),
+                    length = classes.length,
+                    i = 0;
 
-            for(; i < length; i++) {
-              if (classes[i] === className) {
-                classes.splice(i, 1);
-                break;
-              }
-            }
-            // The className is not found
-            if (length === classes.length) {
-                classes.push(className);
-            }
+                for(; i < length; i++) {
+                  if (classes[i] === className) {
+                    classes.splice(i, 1);
+                    break;
+                  }
+                }
+                // The className is not found
+                if (length === classes.length) {
+                    classes.push(className);
+                }
 
-            element.className = classes.join(' ');
+                element.className = classes.join(' ');
+            }
         }
 
         menuLink.onclick = menu = function (e) {
@@ -416,17 +418,17 @@ Plume = (function (window, document) {
         document.querySelector('.editor-author').innerHTML = user.name;
         document.querySelector('.editor-date').innerHTML = formatDate();
         document.querySelector('.editor-tags').innerHTML = '';
-        document.querySelector('.editor-add-tag').value = '';
         setBodyValue('');
 
-        // add event listener for tags
-        document.querySelector('.editor-add-tag').onkeypress = function(e){
-            if (!e) e = window.event;
-            var keyCode = e.keyCode || e.which;
-            if (keyCode == '13'){
-                appendTag(document.querySelector('.editor-add-tag').value, document.querySelector('.color-picker').style.background);
-            }
-        }
+        // add event listener and set up tags
+        // document.querySelector('.editor-add-tag').value = '';
+        // document.querySelector('.editor-add-tag').onkeypress = function(e){
+        //     if (!e) e = window.event;
+        //     var keyCode = e.keyCode || e.which;
+        //     if (keyCode == '13'){
+        //         appendTag(document.querySelector('.editor-add-tag').value, document.querySelector('.color-picker').style.background);
+        //     }
+        // }
 
         // preload data if updating
         if (url && url.length > 0) {
@@ -465,7 +467,7 @@ Plume = (function (window, document) {
         document.querySelector('.editor-author').innerHTML = '';
         document.querySelector('.editor-date').innerHTML = formatDate();
         document.querySelector('.editor-tags').innerHTML = '';
-        document.querySelector('.editor-add-tag').value = '';
+        // document.querySelector('.editor-add-tag').value = '';
         setBodyValue('');
         if (posts && Object.keys(posts).length === 0) {
             document.querySelector('.start').classList.remove('hidden');
@@ -601,7 +603,7 @@ Plume = (function (window, document) {
                 var toLoad = statements.length;
                 var isDone = function() {
                     if (toLoad <= 0) {
-                        resetAll();
+                        document.querySelector('.loading').classList.add('hidden');
                     }
                 }
 
@@ -876,7 +878,6 @@ Plume = (function (window, document) {
         if (url && article) {
             var section = article.querySelector('section');
             var height = section.offsetHeight;
-
             // fade post contents if post is too long
             if (height > 300) {
                 section.classList.add('less');
