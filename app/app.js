@@ -613,7 +613,7 @@ Plume = (function (window, document) {
                             sortedPosts.sort(function(a,b) {
                                 var c = new Date(a.date);
                                 var d = new Date(b.date);
-                                return c-d;
+                                return d-c;
                             });
                             for(var i=0; i<sortedPosts.length; i++) {
                                 var p = sortedPosts[i];
