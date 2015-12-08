@@ -454,8 +454,7 @@ Plume = (function (window, document) {
 
     var resetAll = function() {
         if (config.owner == user.webid) {
-            console.log("Is owner");
-            document.querySelector('.nav').classList.remove('hidden');
+            document.querySelector('.new').classList.remove('hidden');
         }
         document.querySelector('.loading').classList.add('hidden');
         document.querySelector('.editor').classList.add('hidden');
@@ -592,13 +591,6 @@ Plume = (function (window, document) {
         // select element holding all the posts
         var postsdiv = document.querySelector('.posts');
 
-        // Sort by date
-        // array.sort(function(a,b){
-        //     var c = new Date(a.isoDate);
-        //     var d = new Date(b.isoDate);
-        //     return c-d;
-        // });
-
         Solid.getContainerResources(config.dataContainer).then(
             function(statements) {
                 if (statements.length === 0) {
@@ -608,7 +600,7 @@ Plume = (function (window, document) {
 
                 var toLoad = statements.length;
                 var isDone = function() {
-                    if (toLoad === 0) {
+                    if (toLoad <= 0) {
                         resetAll();
                     }
                 }
@@ -661,7 +653,7 @@ Plume = (function (window, document) {
                     )
                     .catch(
                         function(err) {
-                            console.log('Could not fetch post from: '+url+' HTTP '+err);
+                            console.log('Could not fetch post from: '+url+' Reason:'+err);
                             toLoad--;
                             isDone();
                         }
@@ -881,17 +873,19 @@ Plume = (function (window, document) {
     var addTextFade = function(url) {
         // get element current height
         var article = document.getElementById(url);
-        var section = article.querySelector('section');
-        var height = section.offsetHeight;
+        if (url && article) {
+            var section = article.querySelector('section');
+            var height = section.offsetHeight;
 
-        // fade post contents if post is too long
-        if (height > 300) {
-            section.classList.add('less');
-            var fade = document.createElement('div');
-            fade.classList.add('fade-bottom');
-            fade.classList.add('center-text');
-            fade.innerHTML = '<a class="no-decoration clickable" onclick="Plume.showViewer(\''+url+"')\">&mdash; more &mdash;</a>";
-            article.insertBefore(fade, article.querySelector('footer'));
+            // fade post contents if post is too long
+            if (height > 300) {
+                section.classList.add('less');
+                var fade = document.createElement('div');
+                fade.classList.add('fade-bottom');
+                fade.classList.add('center-text');
+                fade.innerHTML = '<a class="no-decoration clickable" onclick="Plume.showViewer(\''+url+"')\">&mdash; more &mdash;</a>";
+                article.insertBefore(fade, article.querySelector('footer'));
+            }
         }
     };
 

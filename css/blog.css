@@ -272,6 +272,7 @@ a.editor-author, a.editor-author:visited {
     background: #1CB841!important;
     color: #fff;
     border: 0;
+    padding: 16px 6px;
 }
 .danger {
     background: #CA3C3C!important;
@@ -648,7 +649,6 @@ appears on the left side of the page.
 */
 
 .content {
-    display: flex;
     margin: 0 auto;
     padding: 0 2em;
     margin-bottom: 50px;
