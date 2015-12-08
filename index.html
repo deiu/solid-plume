@@ -27,70 +27,66 @@
         </button>
 
         <div id="main" class="main content pure-u-1 pure-u-md-3-4">
-            <div>
-                <div class="blog-info header center-text">
-                    <img class="blog-picture" src="">
-                    <h1 class="blog-title">Blog Title</h1>
-                    <h2 class="blog-tagline">Plume, a Solid blog platform</h2>
-                    <div class="spacer"></div>
-                </div>
-                <!-- Editor -->
-                <div class="editor hidden">
-                    <header>
-                        <input type="text" class="editor-title" placeholder="Title">
-                        <div class="editor-meta inline-block">By <a href="#" class="editor-author"></a> on <span class="editor-date"></span></div>
-                        <div class="editor-meta editor-tags inline-block"></div>
-                        <!-- <div class="editor-meta inline-block">
-                            <div class="editor-meta inline-block">Add new tag:</div>
-                            <div class="editor-tag-color inline-block pure-menu pure-menu-has-children">
-                                <div class="post-category pure-menu-link color-picker">Color</div>
-                                <ul class="pure-menu-children">
-                                    <li class="pure-menu-item" onclick="Plume.setColor('color-0')"><div class="post-category color-0">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="Plume.setColor('color-1')"><div class="post-category color-1">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="Plume.setColor('color-2')"><div class="post-category color-2">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="Plume.setColor('color-3')"><div class="post-category color-3">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="Plume.setColor('color-4')"><div class="post-category color-4">&nbsp;</div></li>
-                                    <li class="pure-menu-item" onclick="Plume.setColor('color-5')"><div class="post-category color-5">&nbsp;</div></li>
-                                </ul>
-                            </div>
-                            <input type="text" class="editor-add-tag inline-block" placeholder="name">
-                        </div> -->
-                    </header>
-                    <section>
-                        <textarea class="editor-body"></textarea>
-                    </section>
-                    <footer>
-                        <button class="button publish success" onclick="Plume.publishPost()">Publish</button>
-                        <button class="button preview" onclick="Plume.togglePreview()">Preview</button>
-                        <button class="button float-right" onclick="Plume.resetAll()">Cancel</button>
-                    </footer>
-                </div>
+            <div class="blog-info header center-text">
+                <img class="blog-picture" src="">
+                <h1 class="blog-title">Blog Title</h1>
+                <h2 class="blog-tagline">Plume, a Solid blog platform</h2>
+                <div class="spacer"></div>
+            </div>
+            <!-- Loading animation -->
+            <div class="loading center-text hidden">
+                <div class="loadingbox"></div>
+                <p>Loading post(s)...</p>
+            </div>
+            <!-- Editor -->
+            <div class="editor hidden">
+                <header>
+                    <input type="text" class="editor-title" placeholder="Title">
+                    <div class="editor-meta inline-block">By <a href="#" class="editor-author"></a> on <span class="editor-date"></span></div>
+                    <div class="editor-meta editor-tags inline-block"></div>
+                    <!-- <div class="editor-meta inline-block">
+                        <div class="editor-meta inline-block">Add new tag:</div>
+                        <div class="editor-tag-color inline-block pure-menu pure-menu-has-children">
+                            <div class="post-category pure-menu-link color-picker">Color</div>
+                            <ul class="pure-menu-children">
+                                <li class="pure-menu-item" onclick="Plume.setColor('color-0')"><div class="post-category color-0">&nbsp;</div></li>
+                                <li class="pure-menu-item" onclick="Plume.setColor('color-1')"><div class="post-category color-1">&nbsp;</div></li>
+                                <li class="pure-menu-item" onclick="Plume.setColor('color-2')"><div class="post-category color-2">&nbsp;</div></li>
+                                <li class="pure-menu-item" onclick="Plume.setColor('color-3')"><div class="post-category color-3">&nbsp;</div></li>
+                                <li class="pure-menu-item" onclick="Plume.setColor('color-4')"><div class="post-category color-4">&nbsp;</div></li>
+                                <li class="pure-menu-item" onclick="Plume.setColor('color-5')"><div class="post-category color-5">&nbsp;</div></li>
+                            </ul>
+                        </div>
+                        <input type="text" class="editor-add-tag inline-block" placeholder="name">
+                    </div> -->
+                </header>
+                <section>
+                    <textarea class="editor-body"></textarea>
+                </section>
+                <footer>
+                    <button class="button publish success" onclick="Plume.publishPost()">Publish</button>
+                    <button class="button preview" onclick="Plume.togglePreview()">Preview</button>
+                    <button class="button float-right" onclick="Plume.resetAll()">Cancel</button>
+                </footer>
+            </div>
 
-                <!-- A wrapper for all the blog posts -->
-                <div class="posts">
-                    <!-- Loading animation -->
-                    <div class="loading center-text hidden">
-                        <div class="loadingbox"></div>
-                        <p>Loading posts...</p>
-                    </div>
+            <!-- A wrapper for all the blog posts -->
+            <div class="posts"></div>
 
-                </div>
+            <!-- A wrapper for all the post viewer -->
+            <div class="viewer"></div>
 
-                <!-- A wrapper for all the post viewer -->
-                <div class="viewer"></div>
+            <!-- Write your first article -->
+            <div class="start center-text hidden">
+                <h1>You haven't published anything yet.</h1>
+                <h2><a class="action-button" href="#" onclick="Plume.showEditor()" title="Start writing">Start writing!</a></h2>
+            </div>
 
-                <!-- Write your first article -->
-                <div class="start center-text hidden">
-                    <h1>You haven't published anything yet.</h1>
-                    <h2><a class="action-button" href="#" onclick="Plume.showEditor()" title="Start writing">Start writing!</a></h2>
-                </div>
-
-                <div class="footer">
-                    <div class="pure-menu pure-menu-horizontal">
-                        <ul>
-                            <li class="pure-menu-item"><a href="https://github.com/deiu/solid-plume/" class="pure-menu-link" target="_blank">Powered by Plume <img class="plume-logo" src="img/logo.svg"></a></li>
-                        </ul>
-                    </div>
+            <div class="footer">
+                <div class="pure-menu pure-menu-horizontal">
+                    <ul>
+                        <li class="pure-menu-item"><a href="https://github.com/deiu/solid-plume/" class="pure-menu-link" target="_blank">Powered by Plume <img class="plume-logo" src="img/logo.svg"></a></li>
+                    </ul>
                 </div>
             </div>
         </div>

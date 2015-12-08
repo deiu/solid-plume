@@ -191,12 +191,11 @@ h3 {
     color: #444;
 }
 .editor-title {
-    /*background-color: #ffc;*/
     font-size: 2em;
-    line-height: 1em;
     min-width: 100%;
+    max-width: 100%;
     display: block;
-    padding: 0.5em 0 0.5em 0;
+    padding: 0.5em 0;
     border-radius: 3px;
     outline: none;
     border: 0;

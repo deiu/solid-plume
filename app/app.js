@@ -80,6 +80,15 @@ Plume = (function (window, document) {
         document.querySelector('.blog-title').innerHTML = config.title;
         document.querySelector('.blog-tagline').innerHTML = config.tagline;
 
+        if (queryVals['view'] && queryVals['view'].length > 0) {
+            var url = decodeURIComponent(queryVals['view']);
+            showViewer(url);
+        } else if (queryVals['edit'] && queryVals['edit'].length > 0) {
+            var url = decodeURIComponent(queryVals['edit']);
+            showEditor(url);
+        } else if (queryVals['new'] !== undefined) {
+            showEditor();
+        }
         // append trailing slash to data path if missing
         if (config.defaultPath.lastIndexOf('/') < 0) {
             config.defaultPath += '/';
@@ -114,25 +123,12 @@ Plume = (function (window, document) {
                 });
             }
         });
-
-        // Personalize blog app
-        var pic = document.querySelector('.blog-picture');
-
-        if (queryVals['view'] && queryVals['view'].length > 0) {
-            var url = decodeURIComponent(queryVals['view']);
-            showViewer(url);
-        } else if (queryVals['edit'] && queryVals['edit'].length > 0) {
-            var url = decodeURIComponent(queryVals['edit']);
-            showEditor(url);
-        } else if (queryVals['new'] !== undefined) {
-            showEditor();
-        }
     };
 
     // Init data container
     var initContainer = function() {
         // show loading
-        document.querySelector('.loading').classList.remove('hidden');
+        showLoading();
 
         if (config.dataContainer.length === 0) {
             Solid.resourceStatus(appURL+config.defaultPath).then(
@@ -292,18 +288,26 @@ Plume = (function (window, document) {
     };
 
     var showViewer = function(url) {
+        window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?view="+encodeURIComponent(url));
+        // hide main page
+        document.querySelector('.posts').classList.add('hidden');
         var viewer = document.querySelector('.viewer');
+        viewer.classList.remove('hidden');
+
         var article = postToHTML(posts[url]);
         if (!article) {
+            showLoading();
             fetchPost(url).then(
                 function(post) {
                     // convert post to HTML
                     posts[url] = post;
+                    hideLoading();
                     showViewer(url);
                 }
             ).catch(
                 function(err) {
                     console.log(err);
+                    hideLoading();
                 }
             );
             return;
@@ -325,11 +329,6 @@ Plume = (function (window, document) {
         buttonList.appendChild(back);
         // append button list to viewer
         footer.appendChild(buttonList);
-        // hide main page
-        document.querySelector('.posts').classList.add('hidden');
-        document.querySelector('.viewer').classList.remove('hidden');
-
-        window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?view="+encodeURIComponent(url));
     }
 
     var showEditor = function(url) {
@@ -434,7 +433,7 @@ Plume = (function (window, document) {
         if (config.owner == user.webid) {
             document.querySelector('.new').classList.remove('hidden');
         }
-        document.querySelector('.loading').classList.add('hidden');
+        hideLoading();
         document.querySelector('.editor').classList.add('hidden');
         document.querySelector('.viewer').classList.add('hidden');
         document.querySelector('.viewer').innerHTML = '';
@@ -453,6 +452,13 @@ Plume = (function (window, document) {
 
         window.history.pushState("", document.querySelector('title').value, window.location.pathname);
     };
+
+    var hideLoading = function() {
+        document.querySelector('.loading').classList.add('hidden');
+    }
+    var showLoading = function() {
+        document.querySelector('.loading').classList.remove('hidden');
+    }
 
     var publishPost = function(url) {
         var post = (url)?posts[url]:{};
@@ -591,7 +597,7 @@ Plume = (function (window, document) {
                 var toLoad = statements.length;
                 var isDone = function() {
                     if (toLoad <= 0) {
-                        document.querySelector('.loading').classList.add('hidden');
+                        hideLoading();
                     }
                 }
 
