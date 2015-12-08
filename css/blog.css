@@ -445,8 +445,8 @@ a.editor-author, a.editor-author:visited {
 .post-avatar {
     border-radius: 50px;
     float: right;
-    height: 50px;
-    width: 50px;
+    height: 70px;
+    width: 70px;
     margin-left: 1em;
 }
 .post-body {
@@ -609,50 +609,24 @@ pre {
     zoom: 1.5;
 }
 
-/* NEW LAYOUT FOR MENU */
-
 .pure-img-responsive {
     max-width: 100%;
     height: auto;
 }
-
-#layout,
-#menu,
-.menu-link {
-    -webkit-transition: all 0.2s ease-out;
-    -moz-transition: all 0.2s ease-out;
-    -ms-transition: all 0.2s ease-out;
-    -o-transition: all 0.2s ease-out;
-    transition: all 0.2s ease-out;
-}
-
-#menu {
-    letter-spacing: 1px;
-}
-
-/*
-This is the parent `<div>` that contains the menu and the content area.
-*/
-
-#layout.active #menu {
-    left: 150px;
-    width: 150px;
-}
-
-#layout.active .menu-link {
-    left: 150px;
-}
-
-/*
-The `#menu` `<div>` is the parent `<div>` that contains the `.pure-menu` that
-appears on the left side of the page.
-*/
 
 .content {
     margin: 0 auto;
     padding: 0 2em;
     margin-bottom: 50px;
     line-height: 1.6em;
+    position: relative;
+    top: 0;
+    right: 0;
+    -moz-transition: all 300ms;
+    -o-transition: all 300ms;
+    -webkit-transition: all 300ms;
+    transition: all 300ms;
+    z-index: 1;
 }
 
 .header {
@@ -668,134 +642,118 @@ appears on the left side of the page.
     font-weight: 300;
     line-height: 0.8em;
 }
- .header h2 {
+.header h2 {
     font-weight: 300;
     color: #ccc;
     padding: 0;
     margin-top: 0;
 }
 
-#menu {
-    margin-left: -150px; /* "#menu" width */
-    width: 150px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    font-weight: 200;
-    z-index: 1000; /* so the menu or its navicon stays above all content */
-    background: #191818;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+/* NEW LAYOUT FOR MENU */
+nav#global-nav {
+  background-color: #333;
+  bottom: 0;
+  max-width: 220px;
+  overflow: auto;
+  position: fixed;
+  top: 0;
+  left: -220px;
+  width: 100%;
+  z-index: 10;
+  -moz-transition: all 300ms;
+  -o-transition: all 300ms;
+  -webkit-transition: all 300ms;
+  transition: all 300ms;
 }
-/*
-All anchors inside the menu should be styled like this.
-*/
-#menu a {
-    color: #999;
-    border: none;
-    padding: 0.6em 0 0.6em 0.6em;
+body.active nav#global-nav {
+  -moz-transform: translateX(220px);
+  -ms-transform: translateX(220px);
+  -webkit-transform: translateX(220px);
+  transform: translateX(220px);
 }
-
-/*
-Remove all background/borders, since we are applying them to #menu.
-*/
- #menu .pure-menu,
- #menu .pure-menu ul {
-    border: none;
-    background: transparent;
-}
-
-/*
-Add that light border to separate items into groups.
-*/
-#menu .pure-menu ul,
-#menu .pure-menu .menu-item-divided {
-    border-top: 1px solid #333;
-}
-    /*
-    Change color of the anchor links on hover/focus.
-    */
-    #menu .pure-menu li a:hover,
-    #menu .pure-menu li a:focus {
-        background: #333;
-    }
-
-/*
-This styles the selected menu item `<li>`.
-*/
-#menu .pure-menu-selected,
-#menu .pure-menu-heading {
-    background: #1f8dd6;
-}
-    /*
-    This styles a link within a selected menu item `<li>`.
-    */
-    #menu .pure-menu-selected a {
-        color: #fff;
-    }
-
-/*
-This styles the menu heading.
-*/
-#menu .pure-menu-heading {
-    font-size: 110%;
-    color: #fff;
+nav#global-nav ul {
     margin: 0;
+    padding: 1em 0 0;
 }
-
-/* -- Dynamic Button For Responsive Menu -------------------------------------*/
-
-/*
-The button to open/close the Menu is custom-made and not part of Pure. Here's
-how it works:
-*/
-
-/*
-`.menu-link` represents the responsive menu toggle that shows/hides on
-small screens.
-*/
-.menu-link {
-    position: fixed;
-    display: block; /* show this only on small screens */
-    top: 0;
-    left: 0; /* "#menu width" */
-    background: #000;
-    background: rgba(0,0,0,0.7);
-    font-size: 10px; /* change this value to increase/decrease button size */
-    z-index: 10;
-    width: 5em;
-    height: auto;
-    padding: 2.1em 1.6em;
-}
-
-.menu-link:hover,
-.menu-link:focus {
-    background: #000;
-}
-
-.menu-link span {
-    position: relative;
-    display: block;
-}
-
-.menu-link span,
-.menu-link span:before,
-.menu-link span:after {
+nav#global-nav ul li {
+    border-bottom: 1px solid #474747;
+    padding: 0;
+    margin: 0;
     width: 100%;
-    height: 0.2em;
-    top: 0.1em;
+}
+nav#global-nav ul li a {
+    display: block;
+    background-color: #474747;
+    color: #fff;
+    text-decoration: none;
+    border: 0;
+    margin-right: 0;
+    padding: 1.5em 0 1.5em 2em;
+}
+nav#global-nav ul li a:hover, nav#global-nav ul li a:focus {
+  background-color: #474747;
+}
+nav#global-nav ul li a:active {
+  color: #9fbf00;
 }
 
-.menu-link span:before,
-.menu-link span:after {
-    position: absolute;
-    margin-top: -0.6em;
+/* Menu button */
+
+#menu-button {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 0;
+    color: #333;
+    cursor: pointer;
+    display: block;
+    line-height: 1;
+    width: 60px;
+    height: 60px;
+    margin: 1.5rem 0 auto 1.5em;
+    padding: 0;
+    position: fixed;
+    text-align: center;
+    z-index: 5;
+    -moz-transition: all 300ms;
+    -o-transition: all 300ms;
+    -webkit-transition: all 300ms;
+    transition: all 300ms;
+}
+#menu-button:hover, #menu-button:active {
+    background: #777;
+
+}
+#menu-button span.menu-icon {
+  display: block;
+  pointer-events: none;
+  font-size: 3em;
+  text-shadow: 2px 2px 2px #333;
+}
+#menu-button span.menu-icon svg rect {
+  fill: #333;
+}
+#menu-button:hover span.menu-icon svg rect {
+  fill: #fff;
+}
+#menu-button span.menu-text {
+  display: block;
+  font-size: 0.8em;
+  margin-top: 0.2em;
 }
 
-.menu-link span:after {
-    margin-top: 0.6em;
+
+
+/* Utilities */
+.visuallyhidden {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
 }
+
 
 @media (min-width: 48em) {
     .header,
@@ -822,24 +780,25 @@ small screens.
         bottom: 0;
     }
 
+
     .menu-link {
         position: fixed;
     }
-
-    #layout {
-        font-size: 125%;
-    }
-
     #layout.active .menu-link {
         left: 150px;
     }
+
+    .main {
+        font-size: 125%;
+    }
+
 }
 
 @media (max-width: 48em) {
-    #layout.active {
+/*    #layout.active {
         position: relative;
         left: 150px;
-    }
+    }*/
     .header h1 {
         font-size: 1.7em;
     }

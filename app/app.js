@@ -127,40 +127,6 @@ Plume = (function (window, document) {
         } else if (queryVals['new'] !== undefined) {
             showEditor();
         }
-
-        var layout   = document.getElementById('layout'),
-        menu     = document.getElementById('menu'),
-        menuLink = document.getElementById('menuLink');
-
-        function toggleClass(element, className) {
-            if (element.className) {
-                var classes = element.className.split(/\s+/),
-                    length = classes.length,
-                    i = 0;
-
-                for(; i < length; i++) {
-                  if (classes[i] === className) {
-                    classes.splice(i, 1);
-                    break;
-                  }
-                }
-                // The className is not found
-                if (length === classes.length) {
-                    classes.push(className);
-                }
-
-                element.className = classes.join(' ');
-            }
-        }
-
-        menuLink.onclick = menu = function (e) {
-            var active = 'active';
-
-            e.preventDefault();
-            toggleClass(layout, active);
-            toggleClass(menu, active);
-            toggleClass(menuLink, active);
-        };
     };
 
     // Init data container
@@ -638,14 +604,6 @@ Plume = (function (window, document) {
                             // convert post to HTML
                             var article = postToHTML(post);
 
-                            // add more button
-                            var more = document.createElement('a');
-                            more.classList.add("action-button");
-                            more.setAttribute('onclick', 'Plume.showViewer(\''+post.url+'\')');
-                            more.setAttribute('title', 'View full');
-                            more.innerHTML = 'View full';
-                            article.querySelector('footer').insertBefore(more, article.querySelector('footer').firstChild);
-
                             // sort array and add to dom
                             // TODO improve it later
                             sortedPosts.push({date: post.created, url: post.url});
@@ -1019,3 +977,76 @@ Plume = (function (window, document) {
         togglePreview: togglePreview
     };
 }(this, this.document));
+
+
+Plume.menu = (function() {
+    var ESCAPE_CODE = 27;
+
+    var navButton = document.getElementById('menu-button'),
+      navMenu = document.getElementById('global-nav'),
+      mainDiv = document.getElementById('main');
+
+    var navLinks = navMenu.getElementsByTagName('a');
+
+    function handleKeydown(event) {
+        event.preventDefault();
+        if (event.keyCode === ESCAPE_CODE) {
+              document.body.classList.toggle('active');
+              disableNavLinks();
+              navButton.focus();
+        }
+    };
+    function handleClick(event) {
+        event.preventDefault();
+        console.log(event);
+        if (document.body.classList.contains('active')) {
+              document.body.classList.remove('active');
+              disableNavLinks();
+        }
+        else {
+              document.body.classList.add('active');
+              enableNavLinks();
+              navLinks[0].focus();
+        }
+    };
+    function forceClose(event) {
+        if (document.body.classList.contains('active')) {
+              document.body.classList.remove('active');
+              disableNavLinks();
+        }
+    };
+    function enableNavLinks() {
+        navButton.removeAttribute('aria-label', 'Menu expanded');
+        navMenu.removeAttribute('aria-hidden');
+        for (var i=0; i<navLinks.length; i++) {
+            navLinks[i].removeAttribute('tabIndex');
+        }
+    };
+    function disableNavLinks() {
+        navButton.setAttribute('aria-label', 'Menu collapsed');
+        navMenu.setAttribute('aria-hidden', 'true');
+        for (var i=0; i<navLinks.length; i++) {
+            navLinks[i].setAttribute('tabIndex', '-1');
+        }
+    };
+
+    function initApp() {
+        console.log('asdasd');
+        mainDiv.addEventListener('click', forceClose, false);
+        for (var i=0; i<navLinks.length;i++){
+            navLinks[i].addEventListener('click', forceClose, false);
+        }
+        navMenu.addEventListener('keydown', handleKeydown);
+        navButton.addEventListener('click', handleClick, false);
+        disableNavLinks();
+    };
+
+    return {
+        init: function(){
+            initApp();
+        },
+        forceClose: forceClose
+    }
+})();
+Plume.menu.init();
+

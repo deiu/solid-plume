@@ -15,20 +15,18 @@
 
 <body>
     <div id="layout" class="pure-g">
-        <a href="#menu" id="menuLink" class="menu-link">
-            <!-- Hamburger icon -->
-            <span class="fa fa-bars fa-2x"></span>
-        </a>
-        <div id="menu">
-            <div class="pure-menu">
-                <a class="pure-menu-heading no-decoration" href="#">Home</a>
-                <ul class="pure-menu-list">
-                    <li class="pure-menu-item"><a href="#" class="new hidden pure-menu-link no-decoration" onclick="Plume.showEditor()">New post</a></li>
-                </ul>
-            </div>
-        </div>
+        <nav id="global-nav" aria-label="Main navigation">
+          <ul>
+            <li><a href="#" class="action-button" onclick="Plume.showEditor()">New post</a></li>
+          </ul>
+        </nav>
+        <button aria-controls="global-nav" aria-haspopup="true" tabindex="1" id="menu-button">
+          <span class="menu-icon" aria-hidden="true">
+            <svg version='1.1' x='0px' y='0px' width='40px' height='30px' viewBox='0 0 40 30' enable-background='new 0 0 40 30'><rect width='40' height='5'/><rect y='24' width='40' height='5' /><rect y='12' width='40' height='5'/></svg>
+          </span>
+        </button>
 
-        <div class="main content pure-u-1 pure-u-md-3-4">
+        <div id="main" class="main content pure-u-1 pure-u-md-3-4">
             <div>
                 <div class="blog-info header center-text">
                     <img class="blog-picture" src="">
