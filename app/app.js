@@ -415,7 +415,6 @@ Plume = (function (window, document) {
 
         // preload data if updating
         if (url && url.length > 0) {
-            console.log(posts);
             if (posts[url]) {
                 loadPost(url);
             } else {
@@ -503,7 +502,6 @@ Plume = (function (window, document) {
 
     // save post data to server
     var savePost = function(post, url) {
-        console.log(post);
         // this is called after the post data is done writing to the server
         var updateLocal = function(location) {
             post.url = location;
@@ -521,6 +519,11 @@ Plume = (function (window, document) {
                 postsdiv.insertBefore(article, first);
             } else {
                 postsdiv.appendChild(article);
+            }
+
+            // fade long text in article
+            if (config.fadeText) {
+                addTextFade(post.url);
             }
 
             // fade out to indicate new content
@@ -586,12 +589,13 @@ Plume = (function (window, document) {
                     resetAll();
                     document.querySelector('.start').classList.remove('hidden');
                 }
+                var sortedPosts = [];
                 statements.forEach(function(s){
                     var url = s.object.uri;
 
                     fetchPost(url).then(
                         function(post) {
-                            // add post to dom
+                            // convert post to HTML
                             var article = postToHTML(post);
 
                             // add more button
@@ -602,23 +606,30 @@ Plume = (function (window, document) {
                             more.innerHTML = 'View full';
                             article.querySelector('footer').insertBefore(more, article.querySelector('footer').firstChild);
 
-                            // append to dom
-                            postsdiv.appendChild(article);
 
-                            if (config.fadeText) {
-                                // get element current height
-                                var section = document.getElementById(post.url).querySelector('section');
-                                var height = section.offsetHeight;
-
-                                // fade post contents if post is too long
-                                if (height > 250) {
-                                    section.classList.add('less');
-                                    var fade = document.createElement('div');
-                                    fade.classList.add('fade-bottom');
-                                    fade.classList.add('center-text');
-                                    fade.innerHTML = '<a class="no-decoration clickable" onclick="Plume.showViewer(\''+post.url+"')\">&mdash; more &mdash;</a>";
-                                    article.insertBefore(fade, article.querySelector('footer'));
+                            // sort array and add to dom
+                            // TODO improve it later
+                            sortedPosts.push({date: post.created, url: post.url});
+                            sortedPosts.sort(function(a,b) {
+                                var c = new Date(a.date);
+                                var d = new Date(b.date);
+                                return c-d;
+                            });
+                            for(var i=0; i<sortedPosts.length; i++) {
+                                var p = sortedPosts[i];
+                                if (p.url == post.url) {
+                                    if (i === sortedPosts.length-1) {
+                                        postsdiv.appendChild(article);
+                                    } else {
+                                        postsdiv.insertBefore(article, document.getElementById(sortedPosts[i+1].url));
+                                    }
+                                    break;
                                 }
+                            }
+
+                            // fade long text in article
+                            if (config.fadeText) {
+                                addTextFade(post.url);
                             }
                         }
                     );
@@ -830,6 +841,25 @@ Plume = (function (window, document) {
 
         // append article to list of posts
         return article;
+    };
+
+    // fade long text in articles
+    // TODO fix fade after updating post
+    var addTextFade = function(url) {
+        // get element current height
+        var article = document.getElementById(url);
+        var section = article.querySelector('section');
+        var height = section.offsetHeight;
+
+        // fade post contents if post is too long
+        if (height > 300) {
+            section.classList.add('less');
+            var fade = document.createElement('div');
+            fade.classList.add('fade-bottom');
+            fade.classList.add('center-text');
+            fade.innerHTML = '<a class="no-decoration clickable" onclick="Plume.showViewer(\''+url+"')\">&mdash; more &mdash;</a>";
+            article.insertBefore(fade, article.querySelector('footer'));
+        }
     };
 
     var sortTag = function(name) {
