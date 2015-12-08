@@ -90,7 +90,6 @@ Plume = (function (window, document) {
 
         // Get the current user
         Solid.isAuthenticated(url).then(function(webid){
-            document.querySelector('.nav').classList.add('hidden');
             if (webid.length === 0) {
                 console.log("Could not find WebID from User header, or user is not authenticated. Used "+url);
                 initContainer();
@@ -108,7 +107,7 @@ Plume = (function (window, document) {
 
                     // add new post button if owner
                     if (config.owner == user.webid) {
-                        document.querySelector('.nav').classList.remove('hidden');
+                        document.querySelector('.new').classList.remove('hidden');
                     }
 
                     initContainer();
@@ -117,12 +116,7 @@ Plume = (function (window, document) {
         });
 
         // Personalize blog app
-        var header = document.querySelector('.header');
-        var header_height = getComputedStyle(header).height.split('px')[0];
-        var nav = document.querySelector('.nav');
         var pic = document.querySelector('.blog-picture');
-        var pic_height = getComputedStyle(pic).height.split('px')[0];
-        var diff = header_height - pic_height;
 
         if (queryVals['view'] && queryVals['view'].length > 0) {
             var url = decodeURIComponent(queryVals['view']);
@@ -134,22 +128,44 @@ Plume = (function (window, document) {
             showEditor();
         }
 
-        // function stickyScroll(e) {
-        //     if (window.pageYOffset > (diff + 50)) {
-        //         nav.classList.add('fixed-nav');
-        //     }
+        var layout   = document.getElementById('layout'),
+        menu     = document.getElementById('menu'),
+        menuLink = document.getElementById('menuLink');
 
-        //     if(window.pageYOffset < (diff + 50)) {
-        //         nav.classList.remove('fixed-nav');
-        //     }
-        // }
+        function toggleClass(element, className) {
+            var classes = element.className.split(/\s+/),
+                length = classes.length,
+                i = 0;
 
-        // // Scroll handler to toggle classes.
-        // window.addEventListener('scroll', stickyScroll, false);
+            for(; i < length; i++) {
+              if (classes[i] === className) {
+                classes.splice(i, 1);
+                break;
+              }
+            }
+            // The className is not found
+            if (length === classes.length) {
+                classes.push(className);
+            }
+
+            element.className = classes.join(' ');
+        }
+
+        menuLink.onclick = menu = function (e) {
+            var active = 'active';
+
+            e.preventDefault();
+            toggleClass(layout, active);
+            toggleClass(menu, active);
+            toggleClass(menuLink, active);
+        };
     };
 
     // Init data container
     var initContainer = function() {
+        // show loading
+        document.querySelector('.loading').classList.remove('hidden');
+
         if (config.dataContainer.length === 0) {
             Solid.resourceStatus(appURL+config.defaultPath).then(
                 function(container) {
@@ -392,7 +408,6 @@ Plume = (function (window, document) {
             window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?edit="+encodeURIComponent(url));
         };
 
-        document.querySelector('.nav').classList.add('hidden');
         document.querySelector('.posts').classList.add('hidden');
         document.querySelector('.viewer').classList.add('hidden');
         document.querySelector('.start').classList.add('hidden');
@@ -442,6 +457,7 @@ Plume = (function (window, document) {
             console.log("Is owner");
             document.querySelector('.nav').classList.remove('hidden');
         }
+        document.querySelector('.loading').classList.add('hidden');
         document.querySelector('.editor').classList.add('hidden');
         document.querySelector('.viewer').classList.add('hidden');
         document.querySelector('.viewer').innerHTML = '';
@@ -589,6 +605,14 @@ Plume = (function (window, document) {
                     resetAll();
                     document.querySelector('.start').classList.remove('hidden');
                 }
+
+                var toLoad = statements.length;
+                var isDone = function() {
+                    if (toLoad === 0) {
+                        resetAll();
+                    }
+                }
+
                 var sortedPosts = [];
                 statements.forEach(function(s){
                     var url = s.object.uri;
@@ -605,7 +629,6 @@ Plume = (function (window, document) {
                             more.setAttribute('title', 'View full');
                             more.innerHTML = 'View full';
                             article.querySelector('footer').insertBefore(more, article.querySelector('footer').firstChild);
-
 
                             // sort array and add to dom
                             // TODO improve it later
@@ -631,6 +654,16 @@ Plume = (function (window, document) {
                             if (config.fadeText) {
                                 addTextFade(post.url);
                             }
+
+                            toLoad--;
+                            isDone();
+                        }
+                    )
+                    .catch(
+                        function(err) {
+                            console.log('Could not fetch post from: '+url+' HTTP '+err);
+                            toLoad--;
+                            isDone();
                         }
                     );
                 });
