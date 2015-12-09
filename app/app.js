@@ -941,7 +941,7 @@ Plume = (function (window, document) {
     var togglePreview = function() {
         editor.togglePreview();
         var text = document.querySelector('.preview');
-        text.innerHTML = (text.innerHTML=="Preview")?"Edit":"Preview";
+        text.innerHTML = (text.innerHTML=="View")?"Edit":"View";
     };
 
     // formatDate

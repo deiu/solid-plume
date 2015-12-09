@@ -256,7 +256,7 @@ a.editor-author, a.editor-author:visited {
 }
 .button {
     display: inline-block;
-    padding: 15px 5px;
+    padding: 20px 10px;
     margin-right: 5px;
     background: #fff;
     border-radius: 4px;
@@ -271,8 +271,7 @@ a.editor-author, a.editor-author:visited {
 .success {
     background: #1CB841!important;
     color: #fff;
-    border: 0;
-    padding: 16px 6px;
+    border: 1px solid #1CB841;
 }
 .danger {
     background: #CA3C3C!important;
@@ -664,8 +663,8 @@ nav#global-nav img {
     cursor: pointer;
     display: block;
     line-height: 1;
-    width: 60px;
-    height: 60px;
+    width: 4em;
+    height: 4em;
     left: 0.5em;
     top: 0.5em;
     padding: 0;
@@ -754,15 +753,16 @@ nav#global-nav img {
 }
 
 @media (max-width: 48em) {
-/*    #layout.active {
-        position: relative;
-        left: 150px;
-    }*/
     .header h1 {
         font-size: 1.7em;
     }
     .header h2 {
         font-size: 1.3em;
+    }
+
+    #menu-button {
+        width: 3em;
+        height: 3em;
     }
 
     article>footer {
