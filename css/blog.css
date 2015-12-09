@@ -360,56 +360,6 @@ a.editor-author, a.editor-author:visited {
     margin-top: 30px;
 }
 
-/* NAV */
-.nav {
-    height: 100px;
-    width: 100%;
-    background-color: #333;
-    line-height: 60px;
-    letter-spacing: 1px;
-}
-.nav-list {
-    margin: 0;
-    padding: 1em 0;
-    list-style: none;
-}
-.nav-item {
-    display: inline-block;
-    *display: inline;
-    zoom: 1.5;
-}
-.nav-item a {
-    background: transparent;
-    border: 2px solid #fff;
-    color: #fff;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    font-size: 85%;
-}
-.nav-item a:hover,
-.nav-item a:focus {
-    color: inherit;
-    border: 2px solid rgb(61, 146, 201);
-    text-decoration: none;
-}
-.nav-item img {
-    height: 20px;
-    display: inline-block;
-}
-.nav-item span {
-    color: inherit;
-}
-
-.content-subhead {
-    text-transform: uppercase;
-    color: #aaa;
-    border-bottom: 1px solid #eee;
-    padding: 0.4em 0;
-    font-size: 80%;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-}
-
 .content {
     padding: 0 1em 0;
 }
@@ -696,7 +646,7 @@ nav#global-nav ul li a:hover, nav#global-nav ul li a:focus {
   background-color: #474747;
 }
 nav#global-nav ul li a:active {
-  color: #9fbf00;
+  color: #3D92C9;
 }
 nav#global-nav img {
     position: relative;
