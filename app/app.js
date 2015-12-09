@@ -957,7 +957,8 @@ Plume = (function (window, document) {
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
     var makeSlug = function(str) {
-        return trim(str).replace(/ /g, '-').replace(/[^A-Za-z0-9-]/g, '').toLowerCase();
+        // replace white spaces and multiple dashes
+        return trim(str).replace(/-+/g, '-').replace(/^-+/, '').replace(/-*$/, '').replace(/[^A-Za-z0-9-]/g, '').toLowerCase();
     };
 
     // escape HTML code
