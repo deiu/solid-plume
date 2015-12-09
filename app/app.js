@@ -526,11 +526,11 @@ Plume = (function (window, document) {
 
         //TODO also write tags
         var g = new $rdf.graph();
-        g.add($rdf.sym('#this'), RDF('type'), SIOC('Post'));
-        g.add($rdf.sym('#this'), DCT('title'), $rdf.lit(post.title));
-        g.add($rdf.sym('#this'), SIOC('has_creator'), $rdf.sym('#author'));
-        g.add($rdf.sym('#this'), DCT('created'), $rdf.lit(post.created, '', $rdf.Symbol.prototype.XSDdateTime));
-        g.add($rdf.sym('#this'), SIOC('content'), $rdf.lit(encodeHTML(post.body)));
+        g.add($rdf.sym(''), RDF('type'), SIOC('Post'));
+        g.add($rdf.sym(''), DCT('title'), $rdf.lit(post.title));
+        g.add($rdf.sym(''), SIOC('has_creator'), $rdf.sym('#author'));
+        g.add($rdf.sym(''), DCT('created'), $rdf.lit(post.created, '', $rdf.Symbol.prototype.XSDdateTime));
+        g.add($rdf.sym(''), SIOC('content'), $rdf.lit(encodeHTML(post.body)));
 
         g.add($rdf.sym('#author'), RDF('type'), SIOC('UserAccount'));
         g.add($rdf.sym('#author'), SIOC('account_of'), $rdf.sym(post.author));
@@ -564,11 +564,13 @@ Plume = (function (window, document) {
         // select element holding all the posts
         toElement = toElement || '.posts';
         var postsdiv = document.querySelector(toElement);
-
-        Solid.getContainerResources(url).then(
+        // ask only for sioc:Post resources
+        var resType = SIOC('Post').uri
+        Solid.getContainerResources(url, resType).then(
             function(statements) {
                 if (statements.length === 0) {
                     resetAll();
+                    hideLoading();
                     document.querySelector('.start').classList.remove('hidden');
                 }
 
@@ -581,7 +583,7 @@ Plume = (function (window, document) {
 
                 var sortedPosts = [];
                 statements.forEach(function(s){
-                    var url = s.object.uri;
+                    var url = s.subject.uri;
 
                     fetchPost(url).then(
                         function(post) {

@@ -63,11 +63,22 @@ Solid = (function(window) {
 
     // returns an array of all the resources within an LDP container
     // resolve(array[statement]) | reject
-    var getContainerResources = function(url) {
+    var getContainerResources = function(url, type) {
         var promise = new Promise(function(resolve, reject) {
             getResource(url).then(
                 function(g) {
-                    resolve(g.statementsMatching($rdf.sym(url), LDP('contains'), undefined));
+                    if (type && type.length > 0) {
+                        var st = g.statementsMatching(undefined, RDF('type'), $rdf.sym(type));
+                        if (st.length > 0) {
+                            resolve(st);
+                        } else {
+                            // fallback to containment triples
+                            resolve(g.statementsMatching($rdf.sym(url), LDP('contains'), undefined));
+                        }
+                    } else {
+                        // return all ldp:contains values
+                        resolve(g.statementsMatching($rdf.sym(url), LDP('contains'), undefined));
+                    }
                 }
             )
             .catch(
