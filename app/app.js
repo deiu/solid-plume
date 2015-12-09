@@ -731,12 +731,12 @@ Plume = (function (window, document) {
                     authors[webid].picture = profile.picture;
                     if (url && posts[url]) {
                         var postId = document.getElementById(url);
-                        if (profile.name) {
+                        if (profile.name && postId) {
                             postId.querySelector('.post-author').innerHTML = profile.name;
                             postId.querySelector('.post-avatar').title = profile.name+"'s picture";
                             postId.querySelector('.post-avatar').alt = profile.name+"'s picture";
                         }
-                        if (profile.picture) {
+                        if (profile.picture && postId) {
                             postId.querySelector('.post-avatar').src = profile.picture;
                         }
                     }
@@ -899,11 +899,13 @@ Plume = (function (window, document) {
     };
 
     // Misc/helper functions
-    var notify = function(ntype, text) {
-        var timeout = 1000;
+    var notify = function(ntype, text, timeout) {
+        timeout = timeout || 1500;
         var note = document.createElement('div');
         note.classList.add('note');
         note.innerHTML = text;
+        note.addEventListener('click', note.remove, false);
+
         switch (ntype) {
             case 'success':
                 note.classList.add('success');
@@ -916,13 +918,20 @@ Plume = (function (window, document) {
                 tip.innerHTML = ' Tip: check console for debug information.';
                 note.appendChild(tip);
                 break;
+            case 'sticky':
+                timeout = 0;
+                note.classList.add('dark');
+                note.innerHTML += ' <small>[dismiss]</small>'
+                break;
             default:
+                note.classList.add('dark');
         }
         document.querySelector('body').appendChild(note);
-
-        setTimeout(function() {
-            note.remove();
-        }, timeout);
+        if (timeout > 0) {
+            setTimeout(function() {
+                note.remove();
+            }, timeout);
+        }
     };
 
     // Convert rgb() to #hex
@@ -1125,9 +1134,12 @@ Plume = (function (window, document) {
                 localStorage.removeItem(appURL);
             }
         } catch(err) {
+            notify('sticky', 'You have disabled cookies. Persistence functionality is disabled.');
             console.log(err);
         }
     };
+
+
 
     // start app
     init();
@@ -1136,11 +1148,12 @@ Plume = (function (window, document) {
 
     // return public functions
     return {
+        notify: notify,
         user: user,
         login: login,
         logout: logout,
-        cancelPost: cancelPost,
         resetAll: resetAll,
+        cancelPost: cancelPost,
         showEditor: showEditor,
         showViewer: showViewer,
         setColor: setColor,
