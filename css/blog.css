@@ -672,7 +672,7 @@ body.active nav#global-nav {
 }
 nav#global-nav ul {
     margin: 0;
-    padding: 1em 0 0;
+    padding: 0;
 }
 nav#global-nav ul li {
     border-bottom: 1px solid #474747;
