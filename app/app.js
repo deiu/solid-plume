@@ -6,6 +6,7 @@ Plume = (function (window, document) {
     'use strict';
 
     var config = Plume.config || {};
+    var appURL = window.location.origin+window.location.pathname;
 
     // RDF
     var PROXY = "https://databox.me/,proxy?uri={uri}";
@@ -25,19 +26,34 @@ Plume = (function (window, document) {
     var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
     var TAGS = $rdf.Namespace("http://www.holygoat.co.uk/owl/redwood/0.1/tags/");
 
+    console.log(appURL);
+
     // init markdown editor
     var editor = new SimpleMDE({
         status: false,
-        spellChecker: false,
-        initialValue: 'This is a markdown editor, type something...'
+        spellChecker: false
     });
-    // hljs.initHighlightingOnLoad();
+    editor.codemirror.on("change", function(){
+        savePendingPost(editor.value());
+    });
+
+    // sanitize value to/from markdown editor
+    var getBodyValue = function() {
+        var val = editor.codemirror.getValue();
+        return val.replace('"', '\"');
+    };
+    var setBodyValue = function(val) {
+        editor.value(val);
+    }
+
+    // set up markdown parser
     var parseMD = function(data) {
         if (data) {
             return editor.markdown(data);
         }
         return '';
     };
+
     // Get params from the URL
     var queryVals = (function(a) {
         if (a == "") return {};
@@ -53,25 +69,17 @@ Plume = (function (window, document) {
         return b;
     })(window.location.search.substr(1).split('&'));
 
-    // sanitize value from form
-    var getBodyValue = function() {
-        var val = editor.codemirror.getValue();
-        return val.replace('"', '\"');
-    };
-    var setBodyValue = function(val) {
-        editor.value(val);
-    }
-
-    var user = {
+    var defaultUser = {
         name: "John Doe",
         webid: "https://example.org/user#me",
-        picture: "img/icon-blue.svg"
+        picture: "img/icon-blue.svg",
+        authenticated: false
     };
+
+    var user = {};
 
     var posts = {};
     var authors = {};
-
-    var appURL = window.location.origin+window.location.pathname;
 
     // Initializer
     var init = function() {
@@ -80,6 +88,22 @@ Plume = (function (window, document) {
         document.querySelector('.blog-title').innerHTML = config.title;
         document.querySelector('.blog-tagline').innerHTML = config.tagline;
 
+        // try to load config from localStorage
+        loadLocalStorage();
+
+        if (user.authenticated) {
+            hideLogin();
+        }
+
+
+        // append trailing slash to data path if missing
+        if (config.defaultPath.lastIndexOf('/') < 0) {
+            config.defaultPath += '/';
+        }
+
+        var loadInBg = true;
+
+        // basic app routes
         if (queryVals['view'] && queryVals['view'].length > 0) {
             var url = decodeURIComponent(queryVals['view']);
             showViewer(url);
@@ -88,50 +112,23 @@ Plume = (function (window, document) {
             showEditor(url);
         } else if (queryVals['new'] !== undefined) {
             showEditor();
-        }
-        // append trailing slash to data path if missing
-        if (config.defaultPath.lastIndexOf('/') < 0) {
-            config.defaultPath += '/';
+        } else {
+            loadInBg = false;
         }
 
-        // set auth URL
-        var url = (config.dataContainer)?config.dataContainer:appURL;
-
-        // Get the current user
-        Solid.isAuthenticated(url).then(function(webid){
-            if (webid.length === 0) {
-                console.log("Could not find WebID from User header, or user is not authenticated. Used "+url);
-                initContainer();
-            } else if (webid.slice(0, 4) == 'http') {
-                // fetch and set user profile
-                Solid.getWebIDProfile(webid).then(function(g) {
-                    return getUserProfile(webid, g);
-                }).then(function(profile){
-                    // set WebID
-                    user.webid = profile.webid;
-                    user.name = profile.name;
-                    user.picture = profile.picture;
-                    // add self to authors list
-                    authors[webid] = user;
-
-                    // add new post button if owner
-                    if (config.owner == user.webid) {
-                        document.querySelector('.new').classList.remove('hidden');
-                    }
-
-                    initContainer();
-                });
-            }
-        });
+        // initialize post container and/or load posts
+        initContainer(config.dataContainer, loadInBg);
     };
 
     // Init data container
-    var initContainer = function() {
+    var initContainer = function(url, loadInBg) {
         // show loading
-        showLoading();
+        if (!loadInBg) {
+            showLoading();
+        }
 
         if (config.dataContainer.length === 0) {
-            Solid.resourceStatus(appURL+config.defaultPath).then(
+            Solid.resourceStatus(url).then(
                 function(container) {
                     // create data container for posts if it doesn't exist
                     if (!container.exists && container.err === null) {
@@ -163,14 +160,52 @@ Plume = (function (window, document) {
                         );
                     } else if (container.exists) {
                         config.dataContainer = appURL+config.defaultPath;
-                        fetchPosts();
+                        fetchPosts(url);
                     }
                 }
             );
         } else {
-            fetchPosts();
+            fetchPosts(url);
         }
     }
+
+    var login = function() {
+        // Get the current user
+        Solid.isAuthenticated(config.dataContainer).then(function(webid){
+            if (webid.length === 0) {
+                console.log("Could not find WebID from User header, or user is not authenticated. Used "+url);
+            } else if (webid.slice(0, 4) == 'http') {
+                // set WebID
+                user.webid = webid;
+                user.authenticated = true;
+                hideLogin();
+                // fetch and set user profile
+                Solid.getWebIDProfile(webid).then(function(g) {
+                    return getUserProfile(webid, g);
+                }).then(function(profile){
+                    user.name = profile.name;
+                    user.picture = profile.picture;
+                    user.date = Date.now();
+                    // add self to authors list
+                    authors[webid] = user;
+
+                    // add new post button if owner
+                    if (config.owner == user.webid) {
+                        showNewPostButton();
+                    }
+                    console.log(user);
+                    // save to local storage
+                    saveLocalStorage();
+                });
+            }
+        });
+    };
+    var logout = function() {
+        user = defaultUser;
+        console.log(user);
+        clearLocalStorage();
+        showLogin();
+    };
 
     // get profile data for a given user
     // Returns
@@ -393,7 +428,6 @@ Plume = (function (window, document) {
         document.querySelector('.editor-author').innerHTML = user.name;
         document.querySelector('.editor-date').innerHTML = formatDate();
         document.querySelector('.editor-tags').innerHTML = '';
-        setBodyValue('');
 
         // add event listener and set up tags
         // document.querySelector('.editor-add-tag').value = '';
@@ -417,48 +451,17 @@ Plume = (function (window, document) {
                 );
             }
         } else {
+            // resume post if we have data
+            var post = loadPendingPost();
+            if (post) {
+                setBodyValue(post.body);
+                document.querySelector('.editor-title').value = post.title;
+            }
             document.querySelector('.publish').innerHTML = "Publish";
             document.querySelector('.publish').setAttribute('onclick', 'Plume.publishPost()');
             window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?new");
         }
     };
-
-    var setColor = function(color) {
-        document.querySelector('.color-picker').style.background = window.getComputedStyle(document.querySelector('.'+color), null).backgroundColor;
-        document.querySelector('.pure-menu-active').classList.remove('pure-menu-active');
-        document.querySelector('.editor-add-tag').focus();
-    };
-
-    var resetAll = function() {
-        if (config.owner == user.webid) {
-            document.querySelector('.new').classList.remove('hidden');
-        }
-        hideLoading();
-        document.querySelector('.editor').classList.add('hidden');
-        document.querySelector('.viewer').classList.add('hidden');
-        document.querySelector('.viewer').innerHTML = '';
-        document.querySelector('.posts').classList.remove('hidden');
-        document.querySelector('.editor-title').value = '';
-        document.querySelector('.editor-author').innerHTML = '';
-        document.querySelector('.editor-date').innerHTML = formatDate();
-        document.querySelector('.editor-tags').innerHTML = '';
-        // document.querySelector('.editor-add-tag').value = '';
-        setBodyValue('');
-        if (posts && Object.keys(posts).length === 0) {
-            document.querySelector('.start').classList.remove('hidden');
-        } else {
-            document.querySelector('.start').classList.add('hidden');
-        }
-
-        window.history.pushState("", document.querySelector('title').value, window.location.pathname);
-    };
-
-    var hideLoading = function() {
-        document.querySelector('.loading').classList.add('hidden');
-    }
-    var showLoading = function() {
-        document.querySelector('.loading').classList.remove('hidden');
-    }
 
     var publishPost = function(url) {
         var post = (url)?posts[url]:{};
@@ -481,34 +484,6 @@ Plume = (function (window, document) {
         }
 
         savePost(post, url);
-    };
-
-    // update author details with more recent data
-    // TODO add date of last update to avoid repeated fetches
-    var updateAuthorInfo = function(webid, url) {
-        // check if self first
-        if (webid == user.webid || authors[webid].updated) {
-            return;
-        }
-        Solid.getWebIDProfile(webid).then(function(g) {
-            getUserProfile(webid, g).then(
-                function(profile) {
-                    profile.updated = true;
-                    authors[webid] = profile;
-                    if (url && posts[url]) {
-                        var postId = document.getElementById(url);
-                        if (profile.name) {
-                            postId.querySelector('.post-author').innerHTML = profile.name;
-                            postId.querySelector('.post-avatar').title = profile.name+"'s picture";
-                            postId.querySelector('.post-avatar').alt = profile.name+"'s picture";
-                        }
-                        if (profile.picture) {
-                            postId.querySelector('.post-avatar').src = profile.picture;
-                        }
-                    }
-                }
-            );
-        });
     };
 
     // save post data to server
@@ -544,7 +519,7 @@ Plume = (function (window, document) {
             setTimeout(function() {
                 article.style.background = "transparent";
             }, 500);
-            resetAll();
+            cancelPost();
         };
 
         //TODO also write tags
@@ -583,11 +558,12 @@ Plume = (function (window, document) {
         );
     };
 
-    var fetchPosts = function() {
+    var fetchPosts = function(url, toElement) {
         // select element holding all the posts
-        var postsdiv = document.querySelector('.posts');
+        toElement = toElement || '.posts';
+        var postsdiv = document.querySelector(toElement);
 
-        Solid.getContainerResources(config.dataContainer).then(
+        Solid.getContainerResources(url).then(
             function(statements) {
                 if (statements.length === 0) {
                     resetAll();
@@ -730,6 +706,35 @@ Plume = (function (window, document) {
         });
 
         return promise;
+    };
+
+    // update author details with more recent data
+    // TODO add date of last update to avoid repeated fetches
+    var updateAuthorInfo = function(webid, url) {
+        // check if it really needs updating first
+        if (webid == user.webid || authors[webid].updated) {
+            return;
+        }
+        Solid.getWebIDProfile(webid).then(function(g) {
+            getUserProfile(webid, g).then(
+                function(profile) {
+                    authors[webid].updated = true;
+                    authors[webid].name = profile.name;
+                    authors[webid].picture = profile.picture;
+                    if (url && posts[url]) {
+                        var postId = document.getElementById(url);
+                        if (profile.name) {
+                            postId.querySelector('.post-author').innerHTML = profile.name;
+                            postId.querySelector('.post-avatar').title = profile.name+"'s picture";
+                            postId.querySelector('.post-avatar').alt = profile.name+"'s picture";
+                        }
+                        if (profile.picture) {
+                            postId.querySelector('.post-avatar').src = profile.picture;
+                        }
+                    }
+                }
+            );
+        });
     };
 
     var getAuthorByWebID = function(webid) {
@@ -962,7 +967,127 @@ Plume = (function (window, document) {
             .replace(/&quot;/g, "\"")
             .replace(/&#039;/g, "'");
     };
+    // compute length of objects based on its keys
+    var len = function(obj) {
+        return Object.keys(obj).length;
+    };
 
+
+    var setColor = function(color) {
+        document.querySelector('.color-picker').style.background = window.getComputedStyle(document.querySelector('.'+color), null).backgroundColor;
+        document.querySelector('.pure-menu-active').classList.remove('pure-menu-active');
+        document.querySelector('.editor-add-tag').focus();
+    };
+
+    var cancelPost = function() {
+        document.querySelector('.editor-title').value = '';
+        document.querySelector('.editor-author').innerHTML = '';
+        document.querySelector('.editor-date').innerHTML = formatDate();
+        document.querySelector('.editor-tags').innerHTML = '';
+        setBodyValue('');
+        clearPendingPost();
+        resetAll();
+    };
+
+    // reset to initial view
+    var resetAll = function() {
+        if (config.owner == user.webid) {
+            document.querySelector('.new').classList.remove('hidden');
+        }
+        hideLoading();
+        document.querySelector('.editor').classList.add('hidden');
+        document.querySelector('.viewer').classList.add('hidden');
+        document.querySelector('.viewer').innerHTML = '';
+        document.querySelector('.posts').classList.remove('hidden');
+        // document.querySelector('.editor-add-tag').value = '';
+        if (posts && len(posts) === 0) {
+            document.querySelector('.start').classList.remove('hidden');
+        } else {
+            document.querySelector('.start').classList.add('hidden');
+        }
+
+        window.history.pushState("", document.querySelector('title').value, window.location.pathname);
+    };
+
+    // login / logout buttons + new post
+    var showLogin = function() {
+        document.getElementsByClassName('login')[0].classList.remove('hidden');
+        document.getElementsByClassName('logout')[0].classList.add('hidden');
+        hideNewPostButton();
+    };
+    var hideLogin = function() {
+        document.getElementsByClassName('login')[0].classList.add('hidden');
+        document.getElementsByClassName('logout')[0].classList.remove('hidden');
+        showNewPostButton();
+    };
+    // loading animation
+    var hideLoading = function() {
+        document.querySelector('.loading').classList.add('hidden');
+    }
+    var showLoading = function() {
+        document.querySelector('.loading').classList.remove('hidden');
+    }
+    // new post button
+    var hideNewPostButton = function() {
+        document.querySelector('.new').classList.add('hidden');
+    };
+    var showNewPostButton = function() {
+        document.querySelector('.new').classList.remove('hidden');
+    };
+
+    // save pending post text to localStorage
+    var savePendingPost = function(text) {
+        var post = {};
+        post.title = trim(document.querySelector('.editor-title').value);
+        post.body = text;
+        localStorage.setItem(appURL+'pendingPost', JSON.stringify(post));
+    };
+    // load pending post text from localStorage
+    var loadPendingPost = function() {
+        return JSON.parse(localStorage.getItem(appURL+'pendingPost'));
+    };
+    var clearPendingPost = function() {
+        localStorage.removeItem(appURL+'pendingPost');
+    }
+
+    // save config data to localStorage
+    var saveLocalStorage = function() {
+        var data = {
+            user: user,
+            config: config,
+            authors: authors
+        };
+        localStorage.setItem(appURL, JSON.stringify(data));
+    };
+
+    // clear localstorage config data
+    var clearLocalStorage = function() {
+        localStorage.removeItem(appURL);
+    };
+
+    var loadLocalStorage = function() {
+        var data = JSON.parse(localStorage.getItem(appURL));
+        if (data) {
+            config = data.config;
+            // don't let session data become stale (24h validity)
+            var dateValid = data.user.date + 1000 * 60 * 60 * 24;
+            if (Date.now() < dateValid) {
+                user = data.user;
+                authors = data.authors;
+                if (user.authenticated) {
+                    hideLogin();
+                }
+                console.log("Loaded configuration from localStorage");
+            } else {
+                console.log("Deleting localStorage data because it expired");
+                localStorage.removeItem(appURL);
+            }
+        } else {
+            // clear sessionStorage in case there was a change to the data structure
+            console.log("Deleting localStorage data because of structure change");
+            localStorage.removeItem(appURL);
+        }
+    };
 
     // start app
     init();
@@ -972,6 +1097,9 @@ Plume = (function (window, document) {
     // return public functions
     return {
         user: user,
+        login: login,
+        logout: logout,
+        cancelPost: cancelPost,
         resetAll: resetAll,
         showEditor: showEditor,
         showViewer: showViewer,
@@ -1004,7 +1132,6 @@ Plume.menu = (function() {
     };
     function handleClick(event) {
         event.preventDefault();
-        console.log(event);
         if (document.body.classList.contains('active')) {
               document.body.classList.remove('active');
               disableNavLinks();
@@ -1025,7 +1152,7 @@ Plume.menu = (function() {
         navButton.removeAttribute('aria-label', 'Menu expanded');
         navMenu.removeAttribute('aria-hidden');
         for (var i=0; i<navLinks.length; i++) {
-            navLinks[i].removeAttribute('tabIndex');
+            navLinks[i].setAttribute('tabIndex', i+2);
         }
     };
     function disableNavLinks() {
@@ -1036,8 +1163,7 @@ Plume.menu = (function() {
         }
     };
 
-    function initApp() {
-        console.log('asdasd');
+    function init() {
         mainDiv.addEventListener('click', forceClose, false);
         for (var i=0; i<navLinks.length;i++){
             navLinks[i].addEventListener('click', forceClose, false);
@@ -1048,9 +1174,7 @@ Plume.menu = (function() {
     };
 
     return {
-        init: function(){
-            initApp();
-        },
+        init: init,
         forceClose: forceClose
     }
 })();

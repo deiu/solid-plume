@@ -9,5 +9,5 @@ Plume.config = {
     picture: "img/logo.svg",
     fadeText: true,
     defaultPath: 'posts',
-    dataContainer: ''
+    dataContainer: 'https://localhost:8443/plume/posts/'
 };

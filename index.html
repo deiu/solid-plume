@@ -17,7 +17,10 @@
     <div id="layout" class="pure-g">
         <nav id="global-nav" aria-label="Main navigation">
           <ul>
-            <li><a href="#" class="new" onclick="Plume.showEditor()"><img src="img/logo-white.svg" alt="Edit post">New post</a></li>
+            <li class="new hidden"><a href="#" onclick="Plume.showEditor()"><img src="img/logo-white.svg" alt="Edit post">New post</a></li>
+            <li><h1 class="menu-separator"></h1></li>
+            <li class="login"><a href="#" onclick="Plume.login()">Login</a></li>
+            <li class="logout hidden"><a href="#" onclick="Plume.logout()">Logout</a></li>
           </ul>
         </nav>
         <button aria-controls="global-nav" aria-haspopup="true" tabindex="1" id="menu-button">
@@ -66,7 +69,7 @@
                 <footer>
                     <button class="button publish success" onclick="Plume.publishPost()">Publish</button>
                     <button class="button preview" onclick="Plume.togglePreview()">Preview</button>
-                    <button class="button float-right" onclick="Plume.resetAll()">Cancel</button>
+                    <button class="button float-right" onclick="Plume.cancelPost()">Cancel</button>
                 </footer>
             </div>
 
