@@ -950,7 +950,7 @@ Plume = (function (window, document) {
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
     var makeSlug = function(str) {
-        return trim(str).replace(/ /g, '-').replace(/[^A-Za-z0-9-]/g, '').toLowerCase();;
+        return trim(str).replace(/ /g, '-').replace(/[^A-Za-z0-9-]/g, '').toLowerCase();
     };
 
     // escape HTML code
