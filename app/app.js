@@ -1051,14 +1051,27 @@ Plume = (function (window, document) {
         var post = {};
         post.title = trim(document.querySelector('.editor-title').value);
         post.body = text;
-        localStorage.setItem(appURL+'pendingPost', JSON.stringify(post));
+        try {
+            localStorage.setItem(appURL+'pendingPost', JSON.stringify(post));
+        } catch(err) {
+            console.log(err);
+        }
+
     };
     // load pending post text from localStorage
     var loadPendingPost = function() {
-        return JSON.parse(localStorage.getItem(appURL+'pendingPost'));
+        try {
+            return JSON.parse(localStorage.getItem(appURL+'pendingPost'));
+        } catch(err) {
+            console.log(err);
+        }
     };
     var clearPendingPost = function() {
-        localStorage.removeItem(appURL+'pendingPost');
+        try {
+            localStorage.removeItem(appURL+'pendingPost');
+        } catch(err) {
+            console.log(err);
+        }
     }
 
     // save config data to localStorage
@@ -1068,34 +1081,46 @@ Plume = (function (window, document) {
             config: config,
             authors: authors
         };
-        localStorage.setItem(appURL, JSON.stringify(data));
+        try {
+            localStorage.setItem(appURL, JSON.stringify(data));
+        } catch(err) {
+            console.log(err);
+        }
     };
 
     // clear localstorage config data
     var clearLocalStorage = function() {
-        localStorage.removeItem(appURL);
+        try {
+            localStorage.removeItem(appURL);
+        } catch(err) {
+            console.log(err);
+        }
     };
 
     var loadLocalStorage = function() {
-        var data = JSON.parse(localStorage.getItem(appURL));
-        if (data) {
-            config = data.config;
-            // don't let session data become stale (24h validity)
-            var dateValid = data.user.date + 1000 * 60 * 60 * 24;
-            if (Date.now() < dateValid) {
-                user = data.user;
-                authors = data.authors;
-                if (user.authenticated) {
-                    hideLogin();
+        try {
+            var data = JSON.parse(localStorage.getItem(appURL));
+            if (data) {
+                config = data.config;
+                // don't let session data become stale (24h validity)
+                var dateValid = data.user.date + 1000 * 60 * 60 * 24;
+                if (Date.now() < dateValid) {
+                    user = data.user;
+                    authors = data.authors;
+                    if (user.authenticated) {
+                        hideLogin();
+                    }
+                    console.log("Loaded configuration from localStorage");
+                } else {
+                    console.log("Deleting localStorage data because it expired");
+                    localStorage.removeItem(appURL);
                 }
-                console.log("Loaded configuration from localStorage");
             } else {
-                console.log("Deleting localStorage data because it expired");
+                // clear sessionStorage in case there was a change to the data structure
                 localStorage.removeItem(appURL);
             }
-        } else {
-            // clear sessionStorage in case there was a change to the data structure
-            localStorage.removeItem(appURL);
+        } catch(err) {
+            console.log(err);
         }
     };
 
