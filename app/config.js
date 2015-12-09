@@ -4,7 +4,7 @@ var Plume = Plume || {};
 // Init some default config values
 Plume.config = {
     owner: '',
-    title: "My Plume blog",
+    title: "Plume",
     tagline: "Light as a feather",
     picture: "img/logo.svg",
     fadeText: true,

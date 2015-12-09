@@ -173,7 +173,7 @@ Plume = (function (window, document) {
         // Get the current user
         Solid.isAuthenticated(config.dataContainer).then(function(webid){
             if (webid.length === 0) {
-                console.log("Could not find WebID from User header, or user is not authenticated. Used "+url);
+                console.log("Could not find WebID from User header, or user is not authenticated. Used "+webid);
             } else if (webid.slice(0, 4) == 'http') {
                 // set WebID
                 user.webid = webid;
