@@ -369,6 +369,10 @@ Plume = (function (window, document) {
     }
 
     var showEditor = function(url) {
+        // make sure we're entering in edit mode
+        if (editor.isPreviewActive()) {
+            togglePreview();
+        }
         // hide nav button
         document.getElementById('menu-button').classList.add('hidden');
         // handle tags
