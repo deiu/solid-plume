@@ -26,8 +26,6 @@ Plume = (function (window, document) {
     var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
     var TAGS = $rdf.Namespace("http://www.holygoat.co.uk/owl/redwood/0.1/tags/");
 
-    console.log(appURL);
-
     // init markdown editor
     var editor = new SimpleMDE({
         status: false,
@@ -195,7 +193,6 @@ Plume = (function (window, document) {
                     if (config.owner == user.webid) {
                         showNewPostButton();
                     }
-                    console.log(user);
                     // save to local storage
                     saveLocalStorage();
                 });
@@ -1098,7 +1095,6 @@ Plume = (function (window, document) {
             }
         } else {
             // clear sessionStorage in case there was a change to the data structure
-            console.log("Deleting localStorage data because of structure change");
             localStorage.removeItem(appURL);
         }
     };
