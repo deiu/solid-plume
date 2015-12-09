@@ -95,10 +95,12 @@ Plume = (function (window, document) {
             hideLogin();
         }
 
-
         // append trailing slash to data path if missing
         if (config.defaultPath.lastIndexOf('/') < 0) {
             config.defaultPath += '/';
+        }
+        if (!config.dataContainer || config.dataContainer.length === 0) {
+            config.dataContainer = appURL + config.defaultPath;
         }
 
         var loadInBg = true;
