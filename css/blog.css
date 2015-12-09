@@ -606,7 +606,7 @@ nav#global-nav {
   top: 0;
   left: -220px;
   width: 100%;
-  z-index: 10;
+  z-index: 9;
   -moz-transition: all 300ms;
   -o-transition: all 300ms;
   -webkit-transition: all 300ms;
@@ -668,6 +668,7 @@ nav#global-nav img {
     padding: 0;
     position: fixed;
     text-align: center;
+    z-index: 9;
     -moz-transition: all 300ms;
     -o-transition: all 300ms;
     -webkit-transition: all 300ms;
