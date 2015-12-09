@@ -369,6 +369,9 @@ Plume = (function (window, document) {
     }
 
     var showEditor = function(url) {
+        // hide nav button
+        document.getElementById('menu-button').classList.add('hidden');
+        // handle tags
         var tags = document.querySelector('.editor-tags');
         var appendTag = function(name, color) {
             var tagDiv = document.createElement('div');
@@ -984,6 +987,7 @@ Plume = (function (window, document) {
     };
 
     var cancelPost = function() {
+        document.getElementById('menu-button').classList.remove('hidden');
         document.querySelector('.editor-title').value = '';
         document.querySelector('.editor-author').innerHTML = '';
         document.querySelector('.editor-date').innerHTML = formatDate();
@@ -995,6 +999,7 @@ Plume = (function (window, document) {
 
     // reset to initial view
     var resetAll = function() {
+        document.getElementById('menu-button').classList.remove('hidden');
         if (config.owner == user.webid) {
             document.querySelector('.new').classList.remove('hidden');
         }
