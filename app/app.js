@@ -101,32 +101,41 @@ Plume = (function (window, document) {
             config.dataContainer = appURL + config.defaultPath;
         }
 
-        var loadInBg = true;
+        config.loadInBg = true;
 
         // basic app routes
         if (queryVals['view'] && queryVals['view'].length > 0) {
             var url = decodeURIComponent(queryVals['view']);
             showViewer(url);
+            return;
         } else if (queryVals['edit'] && queryVals['edit'].length > 0) {
             var url = decodeURIComponent(queryVals['edit']);
             showEditor(url);
+            return;
         } else if (queryVals['new'] !== undefined) {
             showEditor();
+            return;
+        } else if (queryVals['blog'] && queryVals['blog'].length > 0) {
+            config.loadInBg = false;
+            initContainer(queryVals['blog']);
         } else {
-            loadInBg = false;
+            config.loadInBg = false;
         }
 
         // initialize post container and/or load posts
-        initContainer(config.dataContainer, loadInBg);
+        initContainer();
     };
 
     // Init data container
-    var initContainer = function(url, loadInBg) {
+    var initContainer = function(url) {
         // show loading
-        if (!loadInBg) {
+        if (!config.loadInBg) {
             showLoading();
         }
 
+        url = url || config.dataContainer;
+
+        // if no default container is set, try to create it
         if (config.dataContainer.length === 0) {
             Solid.resourceStatus(url).then(
                 function(container) {
@@ -356,9 +365,10 @@ Plume = (function (window, document) {
         footer.appendChild(sep);
         // create button list
         var buttonList = document.createElement('div');
-        var back = document.createElement('button');
+        var back = document.createElement('a');
         back.classList.add("action-button");
-        back.setAttribute('onclick', 'Plume.resetAll()');
+        // back.setAttribute('onclick', 'Plume.resetAll()');
+        back.href = window.location.pathname;
         back.innerHTML = '≪ Go back';
         buttonList.appendChild(back);
         // append button list to viewer
@@ -465,7 +475,6 @@ Plume = (function (window, document) {
             }
             document.querySelector('.publish').innerHTML = "Publish";
             document.querySelector('.publish').setAttribute('onclick', 'Plume.publishPost()');
-            window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?new");
         }
     };
 
@@ -663,6 +672,7 @@ Plume = (function (window, document) {
                             var accountOf = g.any(creator, SIOC('account_of'));
                             if (accountOf) {
                                 post.author = encodeHTML(accountOf.uri);
+                                author.webid = post.author;
                             }
                             var name = g.any(creator, FOAF('name'));
                             if (name && name.value && name.value.length > 0) {
@@ -679,7 +689,7 @@ Plume = (function (window, document) {
                             }
                         }
                         // add to list of authors if not self
-                        if (post.author && post.author != user.webid) {
+                        if (post.author && post.author != user.webid && !authors[post.author]) {
                             authors[post.author] = author;
                         }
                         // update author info with fresh data
@@ -720,15 +730,17 @@ Plume = (function (window, document) {
     // TODO add date of last update to avoid repeated fetches
     var updateAuthorInfo = function(webid, url) {
         // check if it really needs updating first
-        if (webid == user.webid || authors[webid].updated) {
+        if (webid == user.webid || authors[webid].updated || authors[webid].lock) {
             return;
         }
+        authors[webid].lock = true;
         Solid.getWebIDProfile(webid).then(function(g) {
             getUserProfile(webid, g).then(
                 function(profile) {
                     authors[webid].updated = true;
                     authors[webid].name = profile.name;
                     authors[webid].picture = profile.picture;
+                    authors[webid].lock = false;
                     if (url && posts[url]) {
                         var postId = document.getElementById(url);
                         if (profile.name && postId) {
@@ -854,7 +866,7 @@ Plume = (function (window, document) {
             // edit button
             var edit = document.createElement('a');
             edit.classList.add("action-button");
-            edit.setAttribute('onclick', 'Plume.showEditor(\''+post.url+'\')');
+            edit.href = '?edit='+post.url;
             edit.setAttribute('title', 'Edit post');
             edit.innerHTML = '<img src="img/logo.svg" alt="Edit post">Edit';
             footer.appendChild(edit);
@@ -1003,14 +1015,8 @@ Plume = (function (window, document) {
     };
 
     var cancelPost = function() {
-        document.getElementById('menu-button').classList.remove('hidden');
-        document.querySelector('.editor-title').value = '';
-        document.querySelector('.editor-author').innerHTML = '';
-        document.querySelector('.editor-date').innerHTML = formatDate();
-        document.querySelector('.editor-tags').innerHTML = '';
-        setBodyValue('');
         clearPendingPost();
-        resetAll();
+        window.location.replace(window.location.pathname);
     };
 
     // reset to initial view
@@ -1081,6 +1087,7 @@ Plume = (function (window, document) {
         }
     };
     var clearPendingPost = function() {
+        setBodyValue('');
         try {
             localStorage.removeItem(appURL+'pendingPost');
         } catch(err) {
