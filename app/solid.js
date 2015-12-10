@@ -41,26 +41,6 @@ Solid = (function(window) {
         });
     };
 
-    // fetch an RDF resource
-    // resolve(graph) | reject(this)
-    var getResource = function(url) {
-        var promise = new Promise(function(resolve, reject) {
-            var g = new $rdf.graph();
-            var f = new $rdf.fetcher(g, TIMEOUT);
-
-            var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
-            f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
-                if (!ok) {
-                    reject({ok: ok, body: body, xhr: xhr, g: g});
-                } else {
-                    resolve(g);
-                }
-            });
-        });
-
-        return promise;
-    };
-
     // returns an array of all the resources within an LDP container
     // resolve(array[statement]) | reject
     var getContainerResources = function(url, type) {
@@ -196,7 +176,7 @@ Solid = (function(window) {
 
     // check if a resource exists and return useful Solid info (acl, meta, type, etc)
     // resolve(metaObj)
-    var resourceStatus = function(url) {
+    var head = function(url) {
         var promise = new Promise(function(resolve) {
             var http = new XMLHttpRequest();
             http.open('HEAD', url);
@@ -211,9 +191,31 @@ Solid = (function(window) {
         return promise;
     };
 
+
+    // fetch an RDF resource
+    // resolve(graph) | reject(this)
+    var get = function(url) {
+        var promise = new Promise(function(resolve, reject) {
+            var g = new $rdf.graph();
+            var f = new $rdf.fetcher(g, TIMEOUT);
+
+            var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
+            f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
+                if (!ok) {
+                    reject({ok: ok, body: body, xhr: xhr, g: g});
+                } else {
+                    resolve(g);
+                }
+            });
+        });
+
+        return promise;
+    };
+
+
     // create new resource
     // resolve(metaObj) | reject
-    var newResource = function(url, slug, data, isContainer) {
+    var post = function(url, slug, data, isContainer) {
         var resType = (isContainer)?'http://www.w3.org/ns/ldp#BasicContainer':'http://www.w3.org/ns/ldp#Resource';
         var promise = new Promise(function(resolve, reject) {
             var http = new XMLHttpRequest();
@@ -245,7 +247,7 @@ Solid = (function(window) {
 
     // update/create resource using HTTP PUT
     // resolve(metaObj) | reject
-    var putResource = function(url, data) {
+    var put = function(url, data) {
         var promise = new Promise(function(resolve, reject) {
             var http = new XMLHttpRequest();
             http.open('PUT', url);
@@ -272,7 +274,7 @@ Solid = (function(window) {
 
     // delete a resource
     // resolve(true) | reject
-    var deleteResource = function(url) {
+    var del = function(url) {
         var promise = new Promise(function(resolve, reject) {
             var http = new XMLHttpRequest();
             http.open('DELETE', url);
@@ -329,12 +331,12 @@ Solid = (function(window) {
     return {
         parseLinkHeader: parseLinkHeader,
         isAuthenticated: isAuthenticated,
-        getResource: getResource,
         getContainerResources: getContainerResources,
         getWebIDProfile: getWebIDProfile,
-        resourceStatus: resourceStatus,
-        newResource: newResource,
-        putResource: putResource,
-        deleteResource: deleteResource
+        get: get,
+        head: head,
+        post: post,
+        put: put,
+        delete: del
     };
 }(this));

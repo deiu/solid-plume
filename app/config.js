@@ -8,6 +8,7 @@ Plume.config = {
     tagline: "Light as a feather",
     picture: "img/logo.svg",
     fadeText: true,
+    cacheUnit: 'days',
     defaultPath: 'posts',
-    dataContainer: ''
+    blogURLs: []
 };
