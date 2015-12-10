@@ -112,6 +112,7 @@ Plume = (function (window, document) {
             showEditor(url);
             return;
         } else if (queryVals['new'] !== undefined) {
+            clearPendingPost();
             showEditor();
             return;
         } else if (queryVals['blog'] && queryVals['blog'].length > 0) {
@@ -783,10 +784,14 @@ Plume = (function (window, document) {
         avatar.src = picture;
         avatar.alt = avatar.title = name+"'s picture";
         // append picture to header
-        header.appendChild(avatar);
+        var avatarLink = document.createElement('a');
+        avatarLink.href = post.author;
+        avatarLink.setAttribute('target', '_blank');
+        avatarLink.appendChild(avatar);
+        header.appendChild(avatarLink);
 
         // add meta data
-        var meta = document.createElement('p');
+        var meta = document.createElement('div');
         meta.classList.add('post-meta');
         // append meta to header
         header.appendChild(meta);
@@ -795,6 +800,7 @@ Plume = (function (window, document) {
         var metaAuthor = document.createElement('a');
         metaAuthor.classList.add('post-author');
         metaAuthor.href = post.author;
+        metaAuthor.setAttribute('target', '_blank');
         metaAuthor.innerHTML = name;
         // append meta author to meta
         meta.appendChild(metaAuthor);
