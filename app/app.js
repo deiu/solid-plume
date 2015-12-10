@@ -578,7 +578,7 @@ Plume = (function (window, document) {
                     fetchPost(url).then(
                         function(post) {
                             // convert post to HTML
-                            var article = postToHTML(post);
+                            var article = postToHTML(post, true);
 
                             // sort array and add to dom
                             // TODO improve it later
@@ -757,7 +757,7 @@ Plume = (function (window, document) {
         return {name: name, picture: picture};
     };
 
-    var postToHTML = function(post) {
+    var postToHTML = function(post, makeLink) {
         // change separator: <h1 class="content-subhead">Recent Posts</h1>
         if (!post) {
             return;
@@ -836,17 +836,23 @@ Plume = (function (window, document) {
         // create title
         var title = document.createElement('h2');
         title.classList.add('post-title');
-        title.innerHTML = (post.title)?'<a class="clickable" href="?view='+post.url+'">'+post.title+'</a>':'';
+        title.innerHTML = (post.title)?'<a class="clickable" href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
         // append title to body
         header.appendChild(title);
 
         // create body
-        var body = document.createElement('section');
-        body.classList.add('post-body');
+        var section = document.createElement('section');
+        section.classList.add('post-body');
+        article.appendChild(section);
+
+        var bodyText = parseMD(decodeHTML(post.body));
+
         // add post body
-        body.innerHTML += parseMD(decodeHTML(post.body));
-        // append body to article
-        article.appendChild(body);
+        if (makeLink) {
+            section.classList.add('clickable');
+            section.addEventListener('click', function (event) { window.location.replace('?view='+encodeURIComponent(post.url))});
+        }
+        section.innerHTML += bodyText;
 
         // add footer with action links
         var footer = document.createElement('footer');
@@ -855,7 +861,7 @@ Plume = (function (window, document) {
             // edit button
             var edit = document.createElement('a');
             edit.classList.add("action-button");
-            edit.href = '?edit='+post.url;
+            edit.href = '?edit='+encodeURIComponent(post.url);
             edit.setAttribute('title', 'Edit post');
             edit.innerHTML = '<img src="img/logo.svg" alt="Edit post">Edit';
             footer.appendChild(edit);
@@ -893,7 +899,7 @@ Plume = (function (window, document) {
                 var fade = document.createElement('div');
                 fade.classList.add('fade-bottom');
                 fade.classList.add('center-text');
-                fade.innerHTML = '<a class="no-decoration clickable" onclick="Plume.showViewer(\''+url+"')\">&mdash; more &mdash;</a>";
+                fade.innerHTML = '<a href="?view='+encodeURIComponent(url)+'" class="no-decoration clickable">&mdash; '+"more &mdash;</a>";
                 article.insertBefore(fade, article.querySelector('footer'));
             }
         }
