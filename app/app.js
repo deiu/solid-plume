@@ -24,7 +24,6 @@ Plume = (function (window, document) {
     var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
     var MBLOG = $rdf.Namespace("http://www.w3.org/ns/mblog#");
     var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
-    var TAGS = $rdf.Namespace("http://www.holygoat.co.uk/owl/redwood/0.1/tags/");
 
     // init markdown editor
     var editor = new SimpleMDE({
@@ -355,6 +354,14 @@ Plume = (function (window, document) {
             );
             return;
         }
+
+        // add last modified date
+        if (posts[url].modified && posts[url].modified != posts[url].created) {
+            var modDate = document.createElement('p');
+            modDate.innerHTML += ' <small class="grey">'+"Last updated on "+formatDate(posts[url].modified, 'LLL')+'</small>';
+            article.querySelector('section').appendChild(modDate);
+        }
+
         // append article
         viewer.appendChild(article);
         var footer = document.createElement('footer');
@@ -493,9 +500,11 @@ Plume = (function (window, document) {
             }
         }
 
+        post.modified = moment().utcOffset('00:00').format("YYYY-MM-DDTHH:mm:ssZ");
+
         if (!url) {
             post.author = user.webid;
-            post.created = moment().utcOffset('00:00').format("YYYY-MM-DDTHH:mm:ssZ");
+            post.created = post.modified;
         }
 
         savePost(post, url);
@@ -503,46 +512,13 @@ Plume = (function (window, document) {
 
     // save post data to server
     var savePost = function(post, url) {
-        // this is called after the post data is done writing to the server
-        var updateLocal = function(location) {
-            post.url = location;
-            posts[post.url] = post;
-            // select element holding all the posts
-            var postsdiv = document.querySelector('.posts');
-            // add/update post element
-            var article = postToHTML(post);
-
-            if (url) {
-                var self = document.getElementById(url);
-                self.parentNode.replaceChild(article, self);
-            } else if (postsdiv.hasChildNodes()) {
-                var first = postsdiv.childNodes[0];
-                postsdiv.insertBefore(article, first);
-            } else {
-                postsdiv.appendChild(article);
-            }
-
-            // fade long text in article
-            if (config.fadeText) {
-                addTextFade(post.url);
-            }
-
-            // fade out to indicate new content
-            article.scrollIntoView(true);
-            article.classList.add("fade-out");
-            notify('success', 'Your post was published');
-            setTimeout(function() {
-                article.style.background = "transparent";
-            }, 500);
-            cancelPost();
-        };
-
-        //TODO also write tags
+        //TODO also write tags - use sioc:topic -> uri
         var g = new $rdf.graph();
         g.add($rdf.sym(''), RDF('type'), SIOC('Post'));
         g.add($rdf.sym(''), DCT('title'), $rdf.lit(post.title));
         g.add($rdf.sym(''), SIOC('has_creator'), $rdf.sym('#author'));
         g.add($rdf.sym(''), DCT('created'), $rdf.lit(post.created, '', $rdf.Symbol.prototype.XSDdateTime));
+        g.add($rdf.sym(''), DCT('modified'), $rdf.lit(post.modified, '', $rdf.Symbol.prototype.XSDdateTime));
         g.add($rdf.sym(''), SIOC('content'), $rdf.lit(encodeHTML(post.body)));
 
         g.add($rdf.sym('#author'), RDF('type'), SIOC('UserAccount'));
@@ -560,7 +536,8 @@ Plume = (function (window, document) {
         }
         writer.then(
             function(res) {
-                updateLocal(res.url);
+                // all done, clean up and go to initial state
+                cancelPost();
             }
         )
         .catch(
@@ -697,10 +674,18 @@ Plume = (function (window, document) {
                             updateAuthorInfo(post.author, url);
                         }
 
-                        // add date
+                        // add created date
                         var created = g.any(subject, DCT('created'));
                         if (created) {
                             post.created = created.value;
+                        }
+
+                        // add modified date
+                        var modified = g.any(subject, DCT('modified'));
+                        if (modified) {
+                            post.modified = modified.value;
+                        } else {
+                            post.modified = post.created;
                         }
 
                         // add body
@@ -862,6 +847,7 @@ Plume = (function (window, document) {
 
         // add footer with action links
         var footer = document.createElement('footer');
+
         if (user.webid == post.author) {
             // edit button
             var edit = document.createElement('a');
@@ -1157,6 +1143,7 @@ Plume = (function (window, document) {
     return {
         notify: notify,
         user: user,
+        posts: posts,
         login: login,
         logout: logout,
         resetAll: resetAll,

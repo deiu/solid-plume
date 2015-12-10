@@ -504,6 +504,9 @@ pre {
 .dark {
     color: #333!important;
 }
+.grey {
+    color: #999;
+}
 
 .hidden {
     display: none;
