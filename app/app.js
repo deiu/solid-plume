@@ -785,17 +785,9 @@ Plume = (function (window, document) {
         // append picture to header
         header.appendChild(avatar);
 
-        // create title
-        var title = document.createElement('h2');
-        title.classList.add('post-title');
-        title.innerHTML = (post.title)?'<a class="clickable" onclick="Plume.showViewer(\''+post.url+'\')">'+post.title+'</a>':'';
-        // append title to header
-        header.appendChild(title);
-
         // add meta data
         var meta = document.createElement('p');
         meta.classList.add('post-meta');
-        meta.innerHTML = "By ";
         // append meta to header
         header.appendChild(meta);
 
@@ -806,6 +798,9 @@ Plume = (function (window, document) {
         metaAuthor.innerHTML = name;
         // append meta author to meta
         meta.appendChild(metaAuthor);
+
+        // add br
+        meta.appendChild(document.createElement('br'));
 
         // create meta date
         var metaDate = document.createElement('span');
@@ -838,10 +833,18 @@ Plume = (function (window, document) {
             meta.appendChild(metaTags);
         }
 
+        // create title
+        var title = document.createElement('h2');
+        title.classList.add('post-title');
+        title.innerHTML = (post.title)?'<a class="clickable" href="?view='+post.url+'">'+post.title+'</a>':'';
+        // append title to body
+        header.appendChild(title);
+
         // create body
         var body = document.createElement('section');
         body.classList.add('post-body');
-        body.innerHTML = parseMD(decodeHTML(post.body));
+        // add post body
+        body.innerHTML += parseMD(decodeHTML(post.body));
         // append body to article
         article.appendChild(body);
 
@@ -867,6 +870,10 @@ Plume = (function (window, document) {
 
         // append footer to post
         article.appendChild(footer);
+
+        var sep = document.createElement('div');
+        sep.classList.add('separator');
+        article.appendChild(sep);
 
         // append article to list of posts
         return article;
@@ -952,8 +959,9 @@ Plume = (function (window, document) {
     };
 
     // formatDate
-    var formatDate = function(date) {
-        return moment(date).format('LL');
+    var formatDate = function(date, style) {
+        style = style || 'LL';
+        return moment(date).format(style);
     };
 
     // sanitize strings

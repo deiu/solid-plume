@@ -361,13 +361,6 @@ a.editor-author, a.editor-author:visited {
     margin-top: 30px;
 }
 
-.content {
-    padding: 0 1em 0;
-}
-
-.post {
-    padding-bottom: 2em;
-}
 .post-edit {
     background: #129FEA;
     height: 25px;
@@ -376,10 +369,10 @@ a.editor-author, a.editor-author:visited {
     mask: url(../img/logo.svg) no-repeat 50% 50%;
 }
 .post-title {
-    font-size: 1.5em;
-    font-weight: 200;
+    font-size: 1.7em;
+    font-weight: bold;
     color: #333;
-    margin-bottom: 0.2em;
+    margin-top: 1.5em;
 }
 
 .post-title>a,.post-title>a:hover,.post-title>a:visited {
@@ -389,20 +382,25 @@ a.editor-author, a.editor-author:visited {
 .post-title>a:hover {
     box-shadow: inset 0 0px 0 white, inset 0 -1px 0 #333;
 }
+.post-author {
+    /*font-size: 1.2em;*/
+}
 .post-author:hover, .post-author:visited {
     color: rgb(61, 146, 201);
 }
 .post-avatar {
     border-radius: 50px;
-    float: right;
-    height: 65px;
-    width: 65px;
-    margin-left: 1em;
+    float: left;
+    height: 40px;
+    width: 40px;
+    margin-right: 1em;
+}
+.post-date {
+    font-weight: 200;
 }
 .post-body {
     color: #444;
-    line-height: 1.8em;
-    padding-top: 1em;
+    line-height: 1.6em;
     font-weight: 200;
 }
 .post-body>a,.post-body>a:hover,.post-body>a:visited {
@@ -415,8 +413,8 @@ a.editor-author, a.editor-author:visited {
 }
 .post-meta {
     color: #999;
-    font-size: 90%;
-    line-height: 1.5em;
+    font-size: 0.8em;
+    line-height: 1.3em;
     margin: 0;
 }
 
@@ -569,8 +567,7 @@ pre {
 
 .content {
     margin: 0 auto;
-    padding: 0 2em;
-    margin-bottom: 50px;
+    padding: 0 1em;
     line-height: 1.6em;
     position: relative;
     top: 0;
@@ -724,10 +721,6 @@ nav#global-nav img {
         padding-right: 2em;
     }
 
-    .post-title {
-        font-size: 2em;
-    }
-
     .blog-picture {
         display: inline;
     }
@@ -746,7 +739,7 @@ nav#global-nav img {
         left: 150px;
     }
 
-    .main {
+    .post-body {
         font-size: 125%;
     }
 
