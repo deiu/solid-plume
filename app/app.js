@@ -359,7 +359,7 @@ Plume = (function (window, document) {
         // add last modified date
         if (posts[url].modified && posts[url].modified != posts[url].created) {
             var modDate = document.createElement('p');
-            modDate.innerHTML += ' <small class="grey">'+"Last updated on "+formatDate(posts[url].modified, 'LLL')+'</small>';
+            modDate.innerHTML += ' <small class="grey">'+"Last updated "+formatDate(posts[url].modified, 'LLL')+'</small>';
             article.querySelector('section').appendChild(modDate);
         }
 
@@ -811,7 +811,7 @@ Plume = (function (window, document) {
         // create meta date
         var metaDate = document.createElement('span');
         metaDate.classList.add('post-date');
-        metaDate.innerHTML = " on "+formatDate(post.created);
+        metaDate.innerHTML = formatDate(post.created);
         // append meta date to meta
         meta.appendChild(metaDate);
 
@@ -973,7 +973,11 @@ Plume = (function (window, document) {
     // formatDate
     var formatDate = function(date, style) {
         style = style || 'LL';
-        return moment(date).format(style);
+        if (moment().diff(moment(date), 'days') > 1) {
+            return moment(date).format(style);
+        } else {
+            return moment(date).fromNow();
+        }
     };
 
     // sanitize strings
