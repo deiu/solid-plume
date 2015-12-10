@@ -37,6 +37,14 @@ h3 {
     font-weight: 100;
 }
 
+.separator {
+    position: relative;
+    margin: 35px 0;
+    height: 1px;
+    background: #ccc;
+    background: -webkit-gradient(linear, 0 0, 100% 0, from(#fff), to(#fff), color-stop(50%, #ccc));
+}
+
 .link {
     color: inherit;
 }
@@ -71,13 +79,6 @@ h3 {
     padding: 0;
     display: flex;
     justify-content: center;
-}
-
-.header {
-    text-align: center;
-    top: auto;
-    margin: 1em auto 0 auto;
-    /*height: 300px;*/
 }
 
 .sidebar {
@@ -394,8 +395,8 @@ a.editor-author, a.editor-author:visited {
 .post-avatar {
     border-radius: 50px;
     float: right;
-    height: 70px;
-    width: 70px;
+    height: 65px;
+    width: 65px;
     margin-left: 1em;
 }
 .post-body {
@@ -585,7 +586,7 @@ pre {
      color: #333;
      text-align: center;
      padding: 2em 2em 0 2em;
-     border-bottom: 1px solid #eee;
+    top: auto;
  }
 .header h1 {
     margin: 0.2em 0;
@@ -721,10 +722,6 @@ nav#global-nav img {
     .content {
         padding-left: 2em;
         padding-right: 2em;
-    }
-
-    .posts {
-        padding-top: 3em;
     }
 
     .post-title {
