@@ -86,6 +86,9 @@ Plume = (function (window, document) {
 
     var blogs = {};
 
+    // keep track of sorted posts
+    var sortedPosts = [];
+
     // Initializer
     var init = function() {
         // Set default config values
@@ -139,8 +142,9 @@ Plume = (function (window, document) {
             return;
         }
 
-        if (config.blogURLs && config.blogURLs > 0) {
+        if (config.blogURLs && config.blogURLs.length > 0) {
             config.blogURLs.forEach(function(blog) {
+                console.log(blog);
                 fetchBlog(blog);
             });
         } else {
@@ -221,6 +225,8 @@ Plume = (function (window, document) {
                     }
                     // save to local storage
                     saveLocalConfig();
+                    // reload page
+                    window.location.reload();
                 });
             }
         });
@@ -326,25 +332,34 @@ Plume = (function (window, document) {
     };
 
     var deletePost = function(url) {
-        if (url) {
-            Solid.delete(url).then(
-                function(done) {
-                    if (done) {
-                        delete posts[url];
-                        document.getElementById(url).remove();
-                        document.getElementById('delete').remove();
-                        notify('success', 'Successfully deleted post');
-                        resetAll();
-                    }
+        Solid.delete(url).then(
+            function(done) {
+                console.log("Deleted ", url);
+                // delete entry from blogs
+                var i = blogs[posts[url].blog].posts.indexOf(url);
+                if (i >= 0) {
+                    blogs[posts[url].blog].posts.splice(i, 1);
                 }
-            )
-            .catch(
-                function(err) {
-                    notify('error', 'Could not delete post');
-                    resetAll();
-                }
-            );
-        }
+                saveLocalBlogs();
+                delete posts[url];
+                // save local storage
+                saveLocalPosts();
+
+                document.getElementById(url).remove();
+                document.getElementById('delete').remove();
+                notify('success', 'Successfully deleted post');
+                goHome();
+            }
+        )
+        .catch(
+            function(err) {
+                notify('error', 'Could not delete post');
+            }
+        );
+    };
+
+    var goHome = function() {
+        window.location.replace(window.location.pathname);
     };
 
     var showViewer = function(url) {
@@ -498,8 +513,43 @@ Plume = (function (window, document) {
                 setBodyValue(post.body);
                 document.querySelector('.editor-title').value = post.title;
             }
+            // update publish button
             document.querySelector('.publish').innerHTML = "Publish";
             document.querySelector('.publish').setAttribute('onclick', 'Plume.publishPost()');
+            // add blog sources
+            if (len(blogs) > 0) {
+                var select = document.querySelector('.editor-blog');
+                select.classList.remove('hidden');
+                select.addEventListener('change', function() {
+                    // enable button
+                    var btn = document.querySelector('.publish');
+                    if (select.value != '') {
+                        btn.disabled = false;
+                        btn.classList.add('success');
+                        btn.classList.remove('disabled');
+                    } else {
+                        btn.disabled = true;
+                        btn.classList.remove('success');
+                        btn.classList.add('disabled');
+                    }
+                }, false);
+
+
+                // editor-blog-urls
+                var options = document.querySelector('.editor-blog-options');
+                Object.keys(blogs).forEach(function(blog) {
+                    var option = document.createElement('option');
+                    option.innerHTML = option.value = blogs[blog].url;
+                    if (len(blogs) === 1) {
+                        option.selected = true;
+                        var btn = document.querySelector('.publish');
+                        btn.disabled = false;
+                        btn.classList.add('success');
+                        btn.classList.remove('disabled');
+                    }
+                    select.appendChild(option);
+                });
+            }
         }
     };
 
@@ -508,38 +558,51 @@ Plume = (function (window, document) {
         post.title = trim(document.querySelector('.editor-title').value);
         post.body = getBodyValue();
         post.tags = [];
-        var allTags = document.querySelectorAll('.editor-tags .post-category');
-        for (var i in allTags) {
-            if (allTags[i].style) {
-                var tag = {};
-                tag.name = allTags[i].querySelector('span').innerHTML;
-                tag.color = rgbToHex(allTags[i].style.background);
-                post.tags.push(tag);
-            }
-        }
+        // var allTags = document.querySelectorAll('.editor-tags .post-category');
+        // for (var i in allTags) {
+        //     if (allTags[i].style) {
+        //         var tag = {};
+        //         tag.name = allTags[i].querySelector('span').innerHTML;
+        //         tag.color = rgbToHex(allTags[i].style.background);
+        //         post.tags.push(tag);
+        //     }
+        // }
 
         post.modified = moment().utcOffset('00:00').format("YYYY-MM-DDTHH:mm:ssZ");
 
         if (!url) {
             post.author = user.webid;
             post.created = post.modified;
+            post.blog = document.querySelector('.editor-blog').value;
         }
-
+        // POST post to blog
         savePost(post, url).then(
             function(res) {
-                url = url || res.
-                // all done, clean up and go to initial state
-                cancelPost();
+                url = url || res.url;
+                post.url = url;
                 // add/update local posts
                 posts[url] = post;
+                addPostToDOM(post);
                 saveLocalPosts();
+
+                // add to post list for corresponding blog
+                var i = blogs[post.blog].posts.indexOf(url);
+                if (i < 0) {
+                    blogs[post.blog].posts.push(url);
+                }
+                saveLocalBlogs();
+
+                // all done, clean up and view post
+                clearPendingPost();
+                resetAll();
+                notify('success', 'Your post has been published');
+                showViewer(url);
             }
         ).catch(
             function(err) {
                 console.log("Could not create post!");
                 console.log(err);
                 notify('error', 'Could not create post');
-                resetAll();
             }
         );
     };
@@ -567,7 +630,7 @@ Plume = (function (window, document) {
                 var writer = Solid.put(url, triples);
             } else {
                 var slug = makeSlug(post.title);
-                var writer = Solid.post(config.dataContainer, slug, triples);
+                var writer = Solid.post(post.blog, slug, triples);
             }
             writer.then(
                 function(res) {
@@ -586,15 +649,18 @@ Plume = (function (window, document) {
 
     var fetchBlog = function(url, toElement) {
         // use cache first
-        console.log("Local cache list of blogs:", blogs);
         if (len(blogs) > 0 && blogs[url]) {
-            console.log("Loading blog from cache", blogs[url]);
             fetchPosts(blogs[url].posts);
         } else {
             // ask only for sioc:Post resources
-            var resType = SIOC('Post').uri
-            Solid.getContainerResources(url, resType).then(
-                function(statements) {
+            Solid.get(url).then(
+                function(g) {
+                    var statements = g.statementsMatching(undefined, RDF('type'), SIOC('Post'));
+                    if (statements.length === 0) {
+                        // fallback to containment triples
+                        statements = g.statementsMatching($rdf.sym(url), LDP('contains'), undefined);
+                    }
+
                     if (statements.length === 0) {
                         resetAll();
                         hideLoading();
@@ -605,11 +671,12 @@ Plume = (function (window, document) {
                     statements.forEach(function(s){
                         blogPosts.push(s.subject.uri);
                     });
-                    fetchPosts(blogPosts);
+                    fetchPosts(blogPosts, url);
 
                     // add blog to the list of cached blogs and set last update date
                     var now = new Date();
                     blogs[url] = {
+                        url: url,
                         date: now,
                         posts: blogPosts
                     };
@@ -625,7 +692,7 @@ Plume = (function (window, document) {
         }
     };
 
-    var fetchPosts = function(urls) {
+    var fetchPosts = function(urls, blogURL) {
         var toLoad = urls.length;
         var isDone = function() {
             if (toLoad <= 0) {
@@ -637,11 +704,10 @@ Plume = (function (window, document) {
         // might have to exit right away if no posts exist
         isDone();
 
-        var sortedPosts = [];
         urls.forEach(function(url){
-            fetchPost(url).then(
+            fetchPost(url, blogURL).then(
                 function(post) {
-                    addPostToDOM(post, sortedPosts);
+                    addPostToDOM(post);
 
                     toLoad--;
                     isDone();
@@ -657,19 +723,22 @@ Plume = (function (window, document) {
         });
     };
 
-    var fetchPost = function(url) {
+    var fetchPost = function(url, blogURL) {
         var promise = new Promise(function(resolve, reject){
             if (posts && len(posts) > 0 && posts[url] && olderThan(posts[url].date, config.cacheUnit) < 1) {
                 return resolve(posts[url]);
             }
             // fetch the resource
-            Solid.getResource(url).then(
+            Solid.get(url).then(
                 function(g) {
                     var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
 
                     if (p) {
                         var subject = p.subject;
-                        var post = { url: subject.uri };
+                        var post = {
+                            url: subject.uri,
+                            blog: blogURL
+                        };
 
                         // add title
                         var title = g.any(subject, DCT('title'));
@@ -749,7 +818,7 @@ Plume = (function (window, document) {
     };
 
     // append post as HTML to DOM
-    var addPostToDOM = function(post, sorted, elem) {
+    var addPostToDOM = function(post, elem) {
         // select element holding all the posts
         elem = elem || config.postsElement;
         var parent = document.querySelector(elem);
@@ -758,19 +827,19 @@ Plume = (function (window, document) {
 
         // sort array and add to dom
         // TODO improve it later
-        sorted.push({date: post.created, url: post.url});
-        sorted.sort(function(a,b) {
+        sortedPosts.push({date: post.created, url: post.url});
+        sortedPosts.sort(function(a,b) {
             var c = new Date(a.date);
             var d = new Date(b.date);
             return d-c;
         });
-        for(var i=0; i<sorted.length; i++) {
-            var p = sorted[i];
+        for(var i=0; i<sortedPosts.length; i++) {
+            var p = sortedPosts[i];
             if (p.url == post.url) {
-                if (i === sorted.length-1) {
+                if (i === sortedPosts.length-1) {
                     parent.appendChild(article);
                 } else {
-                    parent.insertBefore(article, document.getElementById(sorted[i+1].url));
+                    parent.insertBefore(article, document.getElementById(sortedPosts[i+1].url));
                 }
                 break;
             }
@@ -1249,7 +1318,8 @@ Plume = (function (window, document) {
     var clearLocalConfig = function() {
         try {
             localStorage.removeItem(appURL);
-            clearLocalBlogs();
+            // clearLocalBlogs();
+            // clearLocalPosts();
         } catch(err) {
             console.log(err);
         }
@@ -1279,12 +1349,10 @@ Plume = (function (window, document) {
                 localStorage.removeItem(appURL);
             }
         } catch(err) {
-            notify('sticky', 'You have disabled cookies. Persistence functionality is disabled.');
+            notify('sticky', 'You don\'t have cookies enabled. Certain features will not be availabled.');
             console.log(err);
         }
     };
-
-
 
     // start app
     init();

@@ -247,6 +247,45 @@ a.editor-author, a.editor-author:visited {
     min-height: 100px;
     color: #777;
 }
+.editor-blog {
+    background: transparent;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.caret {
+  position: relative;
+}
+
+.caret:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-top: 5px solid #000000;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+}
+
+.caret:after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 0;
+  border-top: 4px solid #eeeeee;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+
+.editor-blog-source {
+    padding: 0.5em;
+    border: 1px solid #ccc;
+}
 
 .small {
     font-size: 50%;
@@ -268,6 +307,11 @@ a.editor-author, a.editor-author:visited {
     line-height: 1px;
     text-transform: uppercase;
     border: 1px solid #777;
+}
+.disabled {
+    background: #ccc!important;
+    color: #777;
+    border: 1px solid #999;
 }
 .success {
     background: #1CB841!important;
@@ -297,6 +341,13 @@ a.editor-author, a.editor-author:visited {
     padding: 0;
     width: 70px;
     z-index: 3;
+}
+.pure-menu-item {
+    padding: 0.5em;
+    background: #fff;
+    display: block;
+    width: 100%;
+
 }
 .pure-menu-has-children>.pure-menu-link:after {
     content: "\25BE";

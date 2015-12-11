@@ -70,9 +70,15 @@
                 </header>
                 <section>
                     <textarea class="editor-body"></textarea>
+                    <br>
+                    <label>Blog:
+                        <select class="editor-blog hidden">
+                            <option value="">...</option>
+                        </select>
+                    </label>
                 </section>
                 <footer>
-                    <button class="button publish success" onclick="Plume.publishPost()">Publish</button>
+                    <button class="button publish disabled" onclick="Plume.publishPost()" disabled>Publish</button>
                     <button class="button preview" onclick="Plume.togglePreview()">View</button>
                     <button class="button float-right" onclick="Plume.cancelPost()">Cancel</button>
                 </footer>

@@ -76,7 +76,7 @@ Solid = (function(window) {
     var getWebIDProfile = function(url) {
         var promise = new Promise(function(resolve) {
             // Load main profile
-            getResource(url).then(
+            get(url).then(
                 function(graph) {
                     // find additional resources to load
                     var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
@@ -92,7 +92,7 @@ Solid = (function(window) {
                     // Load sameAs files
                     if (sameAs.length > 0) {
                         sameAs.forEach(function(same){
-                            getResource(same.object.value, same.object.value).then(
+                            get(same.object.value, same.object.value).then(
                                 function(g) {
                                     addGraph(graph, g);
                                     toLoad--;
@@ -109,7 +109,7 @@ Solid = (function(window) {
                     // Load seeAlso files
                     if (seeAlso.length > 0) {
                         seeAlso.forEach(function(see){
-                            getResource(see.object.value).then(
+                            get(see.object.value).then(
                                 function(g) {
                                     addGraph(graph, g, see.object.value);
                                     toLoad--;
@@ -126,7 +126,7 @@ Solid = (function(window) {
                     // Load preferences files
                     if (prefs.length > 0) {
                         prefs.forEach(function(pref){
-                            getResource(pref.object.value).then(
+                            get(pref.object.value).then(
                                 function(g) {
                                     addGraph(graph, g, pref.object.value);
                                     toLoad--;
