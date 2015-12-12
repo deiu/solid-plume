@@ -330,6 +330,20 @@ Plume = (function (window, document) {
         }
     };
 
+    var showError = function(err) {
+        if (!err) {
+            return;
+        }
+        hideLoading();
+        if (err.status === 404) {
+            var url = err.xhr.requestedURI;
+            document.querySelector('.init-title').innerHTML = "Could not find URL";
+            document.querySelector('.init-url').innerHTML = document.querySelector('.init-url').href = url;
+            document.querySelector('.init').classList.remove('hidden');
+            console.log('Could not fetch URL: '+url, err);
+        }
+    }
+
     var showViewer = function(url) {
         window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?view="+encodeURIComponent(url));
         // hide main page
@@ -349,8 +363,7 @@ Plume = (function (window, document) {
                 }
             ).catch(
                 function(err) {
-                    console.log(err);
-                    hideLoading();
+                    showError(err);
                 }
             );
             return;
@@ -612,7 +625,7 @@ Plume = (function (window, document) {
                     )
                     .catch(
                         function(err) {
-                            console.log('Could not fetch post from: '+url+' Reason:'+err);
+                            showError(err);
                             toLoad--;
                             isDone();
                         }
@@ -622,7 +635,7 @@ Plume = (function (window, document) {
         )
         .catch(
             function(err) {
-                console.log('Could not fetch contents from data container: '+config.dataContainer+' Error: '+err);
+                showError(err);
             }
         );
     };
@@ -703,7 +716,6 @@ Plume = (function (window, document) {
             )
             .catch(
                 function(err) {
-                    console.log('Could not fetch post from: '+url+' HTTP '+err);
                     reject(err);
                 }
             );

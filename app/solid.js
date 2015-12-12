@@ -51,7 +51,7 @@ Solid = (function(window) {
             var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
             f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
                 if (!ok) {
-                    reject({ok: ok, body: body, xhr: xhr, g: g});
+                    reject({ok: ok, status: xhr.status, body: body, xhr: xhr, g: g});
                 } else {
                     resolve(g);
                 }
