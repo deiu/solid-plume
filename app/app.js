@@ -130,75 +130,6 @@ Plume = (function (window, document) {
         loadBlogs();
     };
 
-    // load posts from a specific blog
-    var loadBlogs = function(url) {
-        // show loading
-        if (!config.loadInBg) {
-            showLoading();
-        }
-
-        if (url && url.length > 0) {
-            fetchBlog(url);
-            return;
-        }
-
-        if (config.blogURLs && config.blogURLs.length > 0) {
-            config.blogURLs.forEach(function(blog) {
-                console.log(blog);
-                fetchBlog(blog);
-            });
-        } else {
-            // maybe we have a local folder?
-            fetchBlog(appURL + config.defaultPath);
-        }
-
-    };
-
-    // Init data container
-    var initContainer = function(url) {
-        if (!config.configURLs || config.configURLs.length === 0) {
-            url = appURL + config.defaultPath;
-        }
-
-        // if no default container is set, try to create it
-        Solid.resourceStatus(url).then(
-            function(container) {
-                // create data container for posts if it doesn't exist
-                if (!container.exists && container.err === null) {
-                    Solid.post(appURL, config.defaultPath, null, true).then(
-                        function(res) {
-                            if (res.url && res.url.length > 0) {
-                                config.dataContainer = res.url;
-                            }
-                            // add dummy post
-                            var acme = {
-                                title: "Welcome to Plume, a Solid blogging platform",
-                                author: user.webid,
-                                date: "3 Dec 2015",
-                                body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post created under your name. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article.\n\nGive it a try, write your first post!",
-                                tags: [
-                                    { color: "#df2d4f", name: "Decentralization" },
-                                    { color: "#4d85d1", name: "Solid" }
-                                ]
-                            };
-                            savePost(acme);
-                        }
-                    )
-                    .catch(
-                        function(err) {
-                            console.log("Could not create data container for posts.");
-                            console.log(err);
-                            notify('error', 'Could not create data container');
-                        }
-                    );
-                } else if (container.exists) {
-                    config.dataContainer = appURL+config.defaultPath;
-                    fetchPosts(url);
-                }
-            }
-        );
-    }
-
     var login = function() {
         // Get the current user
         Solid.isAuthenticated(config.dataContainer).then(function(webid){
@@ -647,49 +578,119 @@ Plume = (function (window, document) {
         return promise;
     };
 
-    var fetchBlog = function(url, toElement) {
-        // use cache first
-        if (len(blogs) > 0 && blogs[url]) {
-            fetchPosts(blogs[url].posts);
-        } else {
-            // ask only for sioc:Post resources
-            Solid.get(url).then(
-                function(g) {
-                    var statements = g.statementsMatching(undefined, RDF('type'), SIOC('Post'));
-                    if (statements.length === 0) {
-                        // fallback to containment triples
-                        statements = g.statementsMatching($rdf.sym(url), LDP('contains'), undefined);
-                    }
 
-                    if (statements.length === 0) {
-                        resetAll();
-                        hideLoading();
-                        document.querySelector('.start').classList.remove('hidden');
-                    }
-
-                    var blogPosts = [];
-                    statements.forEach(function(s){
-                        blogPosts.push(s.subject.uri);
-                    });
-                    fetchPosts(blogPosts, url);
-
-                    // add blog to the list of cached blogs and set last update date
-                    var now = new Date();
-                    blogs[url] = {
-                        url: url,
-                        date: now,
-                        posts: blogPosts
-                    };
-                    saveLocalBlogs();
-                }
-            )
-            .catch(
-                function(err) {
-                    console.log('Could not fetch contents from data container: '+config.dataContainer+' Error: '+err);
-                    hideLoading();
-                }
-            );
+    // Init data container
+    var initContainer = function(url) {
+        if (!config.configURLs || config.configURLs.length === 0) {
+            url = appURL + config.defaultPath;
         }
+
+        // if no default container is set, try to create it
+        Solid.resourceStatus(url).then(
+            function(container) {
+                // create data container for posts if it doesn't exist
+                if (!container.exists && container.err === null) {
+                    Solid.post(appURL, config.defaultPath, null, true).then(
+                        function(res) {
+                            if (res.url && res.url.length > 0) {
+                                config.dataContainer = res.url;
+                            }
+                            // add dummy post
+                            var acme = {
+                                title: "Welcome to Plume, a Solid blogging platform",
+                                author: user.webid,
+                                date: "3 Dec 2015",
+                                body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post created under your name. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article.\n\nGive it a try, write your first post!",
+                                tags: [
+                                    { color: "#df2d4f", name: "Decentralization" },
+                                    { color: "#4d85d1", name: "Solid" }
+                                ]
+                            };
+                            savePost(acme);
+                        }
+                    )
+                    .catch(
+                        function(err) {
+                            console.log("Could not create data container for posts.");
+                            console.log(err);
+                            notify('error', 'Could not create data container');
+                        }
+                    );
+                } else if (container.exists) {
+                    config.dataContainer = appURL+config.defaultPath;
+                    fetchPosts(url);
+                }
+            }
+        );
+    };
+
+    // load posts from a specific blog
+    var loadBlogs = function(url) {
+        // show loading
+        if (!config.loadInBg) {
+            showLoading();
+        }
+
+        if (url && url.length > 0) {
+            fetchBlog(url);
+            return;
+        }
+
+        if (config.blogURLs && config.blogURLs.length > 0) {
+            config.blogURLs.forEach(function(blog) {
+                console.log(blog);
+                fetchBlog(blog);
+            });
+        } else {
+            // maybe we have a local folder?
+            fetchBlog(appURL + config.defaultPath);
+        }
+
+    };
+
+    var fetchBlog = function(url) {
+        // use cache first
+        if (blogs && len(blogs) > 0 && blogs[url]) {
+            hideLoading();
+            fetchPosts(blogs[url].posts);
+        }
+        // ask only for sioc:Post resources
+        Solid.get(url).then(
+            function(g) {
+                var statements = g.statementsMatching(undefined, RDF('type'), SIOC('Post'));
+                if (statements.length === 0) {
+                    // fallback to containment triples
+                    statements = g.statementsMatching($rdf.sym(url), LDP('contains'), undefined);
+                }
+
+                if (statements.length === 0) {
+                    resetAll();
+                    hideLoading();
+                    document.querySelector('.start').classList.remove('hidden');
+                }
+
+                var _posts = [];
+                statements.forEach(function(s){
+                    _posts.push(s.subject.uri);
+                });
+                fetchPosts(_posts, url);
+
+                // add blog to the list of cached blogs and set last update date
+                var now = new Date();
+                blogs[url] = {
+                    url: url,
+                    date: now,
+                    posts: _posts
+                };
+                saveLocalBlogs();
+            }
+        )
+        .catch(
+            function(err) {
+                console.log('Could not fetch contents from data container.',err);
+                hideLoading();
+            }
+        );
     };
 
     var fetchPosts = function(urls, blogURL) {
@@ -723,95 +724,98 @@ Plume = (function (window, document) {
         });
     };
 
-    var fetchPost = function(url, blogURL) {
+    var fetchPost = function(url, blogURL, forced) {
         var promise = new Promise(function(resolve, reject){
-            if (posts && len(posts) > 0 && posts[url] && olderThan(posts[url].date, config.cacheUnit) < 1) {
-                return resolve(posts[url]);
-            }
-            // fetch the resource
-            Solid.get(url).then(
-                function(g) {
-                    var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
+            if (!forced && posts && len(posts) > 0 && posts[url] && olderThan(posts[url].date, config.cacheUnit)) {
+                resolve(posts[url]);
+                // update cache
+                fetchPost(url, blogURL, true);
+            } else {
+                // fetch the resource
+                Solid.get(url).then(
+                    function(g) {
+                        var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
 
-                    if (p) {
-                        var subject = p.subject;
-                        var post = {
-                            url: subject.uri,
-                            blog: blogURL
-                        };
+                        if (p) {
+                            var subject = p.subject;
+                            var post = {
+                                url: subject.uri,
+                                blog: blogURL
+                            };
 
-                        // add title
-                        var title = g.any(subject, DCT('title'));
-                        if (title && title.value) {
-                            post.title = encodeHTML(title.value);
-                        }
+                            // add title
+                            var title = g.any(subject, DCT('title'));
+                            if (title && title.value) {
+                                post.title = encodeHTML(title.value);
+                            }
 
-                        // add author
-                        var author = {};
-                        var creator = g.any(subject, SIOC('has_creator'));
-                        if (creator) {
-                            var accountOf = g.any(creator, SIOC('account_of'));
-                            if (accountOf) {
-                                post.author = encodeHTML(accountOf.uri);
-                                author.webid = post.author;
-                            }
-                            var name = g.any(creator, FOAF('name'));
-                            if (name && name.value && name.value.length > 0) {
-                                author.name = encodeHTML(name.value);
-                            }
-                            var picture = g.any(creator, SIOC('avatar'));
-                            if (picture) {
-                                author.picture = encodeHTML(picture.uri);
-                            }
-                        } else {
-                            creator = g.any(subject, DCT('creator'));
+                            // add author
+                            var author = {};
+                            var creator = g.any(subject, SIOC('has_creator'));
                             if (creator) {
-                                post.author = encodeHTML(creator.uri);
+                                var accountOf = g.any(creator, SIOC('account_of'));
+                                if (accountOf) {
+                                    post.author = encodeHTML(accountOf.uri);
+                                    author.webid = post.author;
+                                }
+                                var name = g.any(creator, FOAF('name'));
+                                if (name && name.value && name.value.length > 0) {
+                                    author.name = encodeHTML(name.value);
+                                }
+                                var picture = g.any(creator, SIOC('avatar'));
+                                if (picture) {
+                                    author.picture = encodeHTML(picture.uri);
+                                }
+                            } else {
+                                creator = g.any(subject, DCT('creator'));
+                                if (creator) {
+                                    post.author = encodeHTML(creator.uri);
+                                }
                             }
-                        }
-                        // add to list of authors if not self
-                        if (post.author && post.author != user.webid && !authors[post.author]) {
-                            authors[post.author] = author;
-                        }
-                        // update author info with fresh data
-                        if (post.author && post.author.length >0) {
-                            updateAuthorInfo(post.author, url);
-                        }
+                            // add to list of authors if not self
+                            if (post.author && post.author != user.webid && !authors[post.author]) {
+                                authors[post.author] = author;
+                            }
+                            // update author info with fresh data
+                            if (post.author && post.author.length >0) {
+                                updateAuthorInfo(post.author, url);
+                            }
 
-                        // add created date
-                        var created = g.any(subject, DCT('created'));
-                        if (created) {
-                            post.created = created.value;
+                            // add created date
+                            var created = g.any(subject, DCT('created'));
+                            if (created) {
+                                post.created = created.value;
+                            }
+
+                            // add modified date
+                            var modified = g.any(subject, DCT('modified'));
+                            if (modified) {
+                                post.modified = modified.value;
+                            } else {
+                                post.modified = post.created;
+                            }
+
+                            // add body
+                            var body = g.any(subject, SIOC('content'));
+                            if (body) {
+                                post.body = body.value;
+                            }
+
+                            // add post to local list
+                            posts[post.url] = post;
+                            saveLocalPosts();
+
+                            resolve(post);
                         }
-
-                        // add modified date
-                        var modified = g.any(subject, DCT('modified'));
-                        if (modified) {
-                            post.modified = modified.value;
-                        } else {
-                            post.modified = post.created;
-                        }
-
-                        // add body
-                        var body = g.any(subject, SIOC('content'));
-                        if (body) {
-                            post.body = body.value;
-                        }
-
-                        // add post to local list
-                        posts[post.url] = post;
-                        saveLocalPosts();
-
-                        resolve(post);
                     }
-                }
-            )
-            .catch(
-                function(err) {
-                    console.log('Could not fetch post from: '+url+' HTTP '+err);
-                    reject(err);
-                }
-            );
+                )
+                .catch(
+                    function(err) {
+                        console.log('Could not fetch post from: '+url+' HTTP '+err);
+                        reject(err);
+                    }
+                );
+            }
         });
 
         return promise;
@@ -824,6 +828,12 @@ Plume = (function (window, document) {
         var parent = document.querySelector(elem);
         // convert post to HTML
         var article = postToHTML(post, true);
+
+        // replace existing one if necessary
+        var exists = document.getElementById(post.url);
+        if (exists) {
+            exists.remove();
+        }
 
         // sort array and add to dom
         // TODO improve it later
