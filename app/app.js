@@ -397,12 +397,19 @@ Plume = (function (window, document) {
         footer.appendChild(sep);
         // create button list
         var buttonList = document.createElement('div');
+        // add back button
         var back = document.createElement('a');
         back.classList.add("action-button");
-        // back.setAttribute('onclick', 'Plume.resetAll()');
         back.href = window.location.pathname;
         back.innerHTML = '≪ Go back';
         buttonList.appendChild(back);
+        // add view source
+        var orig = document.createElement('a');
+        orig.classList.add("action-button");
+        orig.href = url;
+        orig.target = '_blank';
+        orig.innerHTML = 'View original';
+        buttonList.appendChild(orig);
         // append button list to viewer
         footer.appendChild(buttonList);
     }
@@ -880,7 +887,8 @@ Plume = (function (window, document) {
         // create title
         var title = document.createElement('h2');
         title.classList.add('post-title');
-        title.innerHTML = (post.title)?'<a class="clickable" href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
+        var titleLink = '<a href="'+post.url+'" target="_blank"><span class="fa fa-link"></span></a> <a class="clickable" href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>';
+        title.innerHTML = (post.title)?titleLink:'';
         // append title to body
         header.appendChild(title);
 
@@ -1222,7 +1230,7 @@ Plume = (function (window, document) {
 
 
 
-    // start app
+    // ----- start app -----
     init();
 
 
