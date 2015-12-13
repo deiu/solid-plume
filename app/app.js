@@ -95,6 +95,7 @@ Plume = (function (window, document) {
 
         // try to load config from localStorage
         loadLocalStorage();
+        loadLocalAuthors();
 
         if (user.authenticated) {
             hideLogin();
@@ -145,11 +146,11 @@ Plume = (function (window, document) {
 
         // if no default container is set, try to create it
         if (config.dataContainer.length === 0) {
-            Solid.io.head(url).then(
+            Solid.web.head(url).then(
                 function(container) {
                     // create data container for posts if it doesn't exist
                     if (!container.exists && container.err === null) {
-                        Solid.io.post(appURL, config.defaultPath, null, true).then(
+                        Solid.web.post(appURL, config.defaultPath, null, true).then(
                             function(res) {
                                 if (res.url && res.url.length > 0) {
                                     config.dataContainer = res.url;
@@ -205,6 +206,8 @@ Plume = (function (window, document) {
                     user.date = Date.now();
                     // add self to authors list
                     authors[webid] = user;
+                    // save list
+                    saveLocalAuthors();
 
                     // add new post button if owner
                     if (config.owner == user.webid) {
@@ -218,7 +221,6 @@ Plume = (function (window, document) {
     };
     var logout = function() {
         user = defaultUser;
-        console.log(user);
         clearLocalStorage();
         showLogin();
     };
@@ -229,56 +231,57 @@ Plume = (function (window, document) {
     // name: "John Doe",
     // picture: "https://example.org/profile.png"
     var getUserProfile = function(webid, g) {
-        var promise = new Promise(function(resolve) {
-            var profile = {};
-            var webidRes = $rdf.sym(webid);
+        var profile = {};
 
-            // set webid
-            profile.webid = webid;
+        if (!g) {
+            return profile;
+        }
 
-            // set name
-            var name = g.any(webidRes, FOAF('name'));
-            if (name && name.value.length > 0) {
-                profile.name = name.value;
-            } else {
-                profile.name = '';
-                // use familyName and givenName instead of full name
-                var givenName = g.any(webidRes, FOAF('familyName'));
-                if (givenName) {
-                    profile.name += givenName.value;
-                }
-                var familyName = g.any(webidRes, FOAF('familyName'));
-                if (familyName) {
-                    profile.name += (givenName)?' '+familyName.value:familyName.value;
-                }
-                // use nick
-                if (!givenName && !familyName) {
-                    var nick = g.any(webidRes, FOAF('nick'));
-                    if (nick) {
-                        profile.name = nick.value;
-                    }
+        var webidRes = $rdf.sym(webid);
+
+        // set webid
+        profile.webid = webid;
+
+        // set name
+        var name = g.any(webidRes, FOAF('name'));
+        if (name && name.value.length > 0) {
+            profile.name = name.value;
+        } else {
+            profile.name = '';
+            // use familyName and givenName instead of full name
+            var givenName = g.any(webidRes, FOAF('familyName'));
+            if (givenName) {
+                profile.name += givenName.value;
+            }
+            var familyName = g.any(webidRes, FOAF('familyName'));
+            if (familyName) {
+                profile.name += (givenName)?' '+familyName.value:familyName.value;
+            }
+            // use nick
+            if (!givenName && !familyName) {
+                var nick = g.any(webidRes, FOAF('nick'));
+                if (nick) {
+                    profile.name = nick.value;
                 }
             }
+        }
 
-            // set picture
-            var pic, img = g.any(webidRes, FOAF('img'));
-            if (img) {
-                pic = img;
-            } else {
-                // check if profile uses depic instead
-                var depic = g.any(webidRes, FOAF('depiction'));
-                if (depic) {
-                    pic = depic;
-                }
+        // set picture
+        var pic, img = g.any(webidRes, FOAF('img'));
+        if (img) {
+            pic = img;
+        } else {
+            // check if profile uses depic instead
+            var depic = g.any(webidRes, FOAF('depiction'));
+            if (depic) {
+                pic = depic;
             }
-            if (pic && pic.uri.length > 0) {
-                profile.picture = pic.uri;
-            }
+        }
+        if (pic && pic.uri.length > 0) {
+            profile.picture = pic.uri;
+        }
 
-            resolve(profile);
-        });
-
-        return promise;
+        return profile;
     };
 
     var confirmDelete = function(url) {
@@ -318,7 +321,7 @@ Plume = (function (window, document) {
 
     var deletePost = function(url) {
         if (url) {
-            Solid.io.del(url).then(
+            Solid.web.del(url).then(
                 function(done) {
                     if (done) {
                         delete posts[url];
@@ -556,10 +559,10 @@ Plume = (function (window, document) {
         var triples = new $rdf.Serializer(g).toN3(g);
 
         if (url) {
-            var writer = Solid.io.put(url, triples);
+            var writer = Solid.web.put(url, triples);
         } else {
             var slug = makeSlug(post.title);
-            var writer = Solid.io.post(config.dataContainer, slug, triples);
+            var writer = Solid.web.post(config.dataContainer, slug, triples);
         }
         writer.then(
             function(res) {
@@ -583,7 +586,7 @@ Plume = (function (window, document) {
         var postsdiv = document.querySelector(toElement);
         // ask only for sioc:Post resources
         var resType = SIOC('Post').uri
-        Solid.io.getContainer(url, resType).then(
+        Solid.web.getContainer(url, resType).then(
             function(statements) {
                 if (statements.length === 0) {
                     resetAll();
@@ -657,7 +660,7 @@ Plume = (function (window, document) {
 
     var fetchPost = function(url) {
         var promise = new Promise(function(resolve, reject){
-            Solid.io.get(url).then(
+            Solid.web.get(url).then(
                 function(g) {
                     var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
 
@@ -697,6 +700,8 @@ Plume = (function (window, document) {
                         // add to list of authors if not self
                         if (post.author && post.author != user.webid && !authors[post.author]) {
                             authors[post.author] = author;
+                            // save list to localStorage
+                            saveLocalAuthors();
                         }
                         // update author info with fresh data
                         if (post.author && post.author.length >0) {
@@ -747,26 +752,32 @@ Plume = (function (window, document) {
             return;
         }
         authors[webid].lock = true;
-        Solid.identity.getProfile(webid).then(function(g) {
-            getUserProfile(webid, g).then(
-                function(profile) {
-                    authors[webid].updated = true;
-                    authors[webid].name = profile.name;
-                    authors[webid].picture = profile.picture;
-                    authors[webid].lock = false;
-                    if (url && posts[url]) {
-                        var postId = document.getElementById(url);
-                        if (profile.name && postId) {
-                            postId.querySelector('.post-author').innerHTML = profile.name;
-                            postId.querySelector('.post-avatar').title = profile.name+"'s picture";
-                            postId.querySelector('.post-avatar').alt = profile.name+"'s picture";
-                        }
-                        if (profile.picture && postId) {
-                            postId.querySelector('.post-avatar').src = profile.picture;
-                        }
+        Solid.identity.getProfile(webid).
+        then(function(g) {
+            var profile = getUserProfile(webid, g);
+            if (len(profile) > 0) {
+                authors[webid].updated = true;
+                authors[webid].name = profile.name;
+                authors[webid].picture = profile.picture;
+                // save to localStorage
+                saveLocalAuthors();
+                // release lock
+                authors[webid].lock = false;
+                if (url && posts[url]) {
+                    var postId = document.getElementById(url);
+                    if (profile.name && postId) {
+                        postId.querySelector('.post-author').innerHTML = profile.name;
+                        postId.querySelector('.post-avatar').title = profile.name+"'s picture";
+                        postId.querySelector('.post-avatar').alt = profile.name+"'s picture";
+                    }
+                    if (profile.picture && postId) {
+                        postId.querySelector('.post-avatar').src = profile.picture;
                     }
                 }
-            );
+            }
+        }).
+        catch(function(err) {
+            console.log(err);
         });
     };
 
@@ -1134,6 +1145,34 @@ Plume = (function (window, document) {
         }
     }
 
+    // save authors to localStorage
+    var saveLocalAuthors = function() {
+        try {
+            localStorage.setItem(appURL+'authors', JSON.stringify(authors));
+        } catch(err) {
+            console.log(err);
+        }
+    };
+    // clear localstorage authors data
+    var clearLocalAuthors = function() {
+        try {
+            localStorage.removeItem(appURL+'authors');
+        } catch(err) {
+            console.log(err);
+        }
+    };
+    // clear localstorage config data
+    var loadLocalAuthors = function() {
+        try {
+            var data = JSON.parse(localStorage.getItem(appURL+'authors'));
+            if (data) {
+                authors = data;
+            }
+        } catch(err) {
+            console.log(err);
+        }
+    };
+
     // save config data to localStorage
     var saveLocalStorage = function() {
         var data = {
@@ -1147,7 +1186,6 @@ Plume = (function (window, document) {
             console.log(err);
         }
     };
-
     // clear localstorage config data
     var clearLocalStorage = function() {
         try {
@@ -1156,7 +1194,6 @@ Plume = (function (window, document) {
             console.log(err);
         }
     };
-
     var loadLocalStorage = function() {
         try {
             var data = JSON.parse(localStorage.getItem(appURL));
@@ -1166,11 +1203,9 @@ Plume = (function (window, document) {
                 var dateValid = data.user.date + 1000 * 60 * 60 * 24;
                 if (Date.now() < dateValid) {
                     user = data.user;
-                    authors = data.authors;
                     if (user.authenticated) {
                         hideLogin();
                     }
-                    console.log("Loaded configuration from localStorage");
                 } else {
                     console.log("Deleting localStorage data because it expired");
                     localStorage.removeItem(appURL);
