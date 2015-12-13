@@ -170,6 +170,8 @@ Solid.web = (function(window) {
 
 // Identity / WebID
 Solid.identity = (function(window) {
+    'use strict';
+
     // Init some defaults;
     var PROXY = "https://databox.me/proxy?uri={uri}";
     var TIMEOUT = 5000;
@@ -178,6 +180,7 @@ Solid.identity = (function(window) {
     // common vocabs
     var OWL = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
     var PIM = $rdf.Namespace("http://www.w3.org/ns/pim/space#");
+    var FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/");
 
     // fetch user profile (follow sameAs links) and return promise with a graph
     // resolve(graph)
@@ -263,14 +266,36 @@ Solid.identity = (function(window) {
         return promise;
     };
 
+    // Find the user's workspaces
+    var getWorkspaces = function(webid, graph) {
+        var promise = new Promise(function(resolve, reject){
+            if (!graph) {
+                // fetch profile
+                getProfile(webid).then(function(g) {
+                    return getWorkspaces(webid, g);
+                }).catch(function(err){
+                    reject(err);
+                });
+            } else {
+                // find workspaces
+                console.log(graph);
+            }
+        });
+
+        return promise;
+    };
+
     // return public methods
     return {
         getProfile: getProfile,
+        getWorkspaces: getWorkspaces
     };
 }(this));
 
 // Authentication
 Solid.auth = (function(window) {
+    'use strict';
+
     // return the current user's WebID from the User header if authenticated
     // resolve(string)
     var withWebID = function(url) {
@@ -326,6 +351,8 @@ Solid.auth = (function(window) {
 
 // Events
 Solid.status = (function(window) {
+    'use strict';
+
     // Get current online status
     var isOnline = function() {
         return window.navigator.onLine;
@@ -351,6 +378,8 @@ Solid.status = (function(window) {
 
 // --------------- Helper functions ---------------
 Solid.utils = (function(window) {
+    'use strict';
+
     // parse a Link header
     var parseLinkHeader = function(link) {
         var linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g;
