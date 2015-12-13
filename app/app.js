@@ -373,7 +373,7 @@ Plume = (function (window, document) {
     var showViewer = function(url) {
         window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?view="+encodeURIComponent(url));
         // hide main page
-        document.querySelector('.posts').classList.add('hidden');
+        document.querySelector(config.postsElement).classList.add('hidden');
         var viewer = document.querySelector('.viewer');
         viewer.classList.remove('hidden');
 
