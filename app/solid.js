@@ -19,36 +19,6 @@ Solid.web = (function(window) {
     var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
     var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
 
-    // returns an array of all the resources within an LDP container
-    // resolve(array[statement]) | reject
-    var getContainer = function(url, type) {
-        var promise = new Promise(function(resolve, reject) {
-            get(url).then(
-                function(g) {
-                    if (type && type.length > 0) {
-                        var st = g.statementsMatching(undefined, RDF('type'), $rdf.sym(type));
-                        if (st.length > 0) {
-                            resolve(st);
-                        } else {
-                            // fallback to containment triples
-                            resolve(g.statementsMatching($rdf.sym(url), LDP('contains'), undefined));
-                        }
-                    } else {
-                        // return all ldp:contains values
-                        resolve(g.statementsMatching($rdf.sym(url), LDP('contains'), undefined));
-                    }
-                }
-            )
-            .catch(
-                function(err) {
-                    reject(err);
-                }
-            );
-        });
-
-        return promise;
-    };
-
     // return metadata for a given request
     var parseResponseMeta = function(resp) {
         var h = Solid.utils.parseLinkHeader(resp.getResponseHeader('Link'));
@@ -188,11 +158,8 @@ Solid.web = (function(window) {
         return promise;
     }
 
-
-
     // return public methods
     return {
-        getContainer: getContainer,
         head: head,
         get: get,
         post: post,
@@ -219,10 +186,12 @@ Solid.identity = (function(window) {
             // Load main profile
             Solid.web.get(url).then(
                 function(graph) {
+                    // set WebID
+                    var webid = graph.any($rdf.sym(url), FOAF('primaryTopic'));
                     // find additional resources to load
-                    var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
-                    var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
-                    var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
+                    var sameAs = graph.statementsMatching(webid, OWL('sameAs'), undefined);
+                    var seeAlso = graph.statementsMatching(webid, OWL('seeAlso'), undefined);
+                    var prefs = graph.statementsMatching(webid, PIM('preferencesFile'), undefined);
                     var toLoad = sameAs.length + seeAlso.length + prefs.length;
 
                     var checkAll = function() {
