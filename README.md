@@ -8,7 +8,7 @@ Plume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you wit
 
 It currently does not support dynamic configuration of data spaces, which means you will have to either run it on your own Web server, or manually upload it to your account -- you can use [https://databox.me]( https://databox.me) as storge. The next version will allow you to run it from Github, like all the other [Solid apps](https://github.com/solid/solid-apps) we currently offer.
 
-You can manually edit the `config.json` file and set some config values. For instance you can set the `postsURL` value to have it point to an **existing** container on a [Solid-friendly server](https://github.com/solid/solid-platform) that holds your blog posts. You should also set the `owner` to your own WebID, to be able to access the editor UI and to create new posts.
+To manually set some config values, first you need to copy/rename the `config-example.json` file to `config.json`. Then you need to set the `postsURL` value to have it point to an **existing** container on a [Solid-friendly server](https://github.com/solid/solid-platform) that holds your blog posts. You should also set the `owner` to your own WebID, to be able to access the editor UI and to create new posts.
 
 Here is an example of the configuration file:
 
