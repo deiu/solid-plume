@@ -26,7 +26,7 @@ Here is an example of the configuration file:
 }
 ```
 
-Here is an explanation for each config parameter:
+Here is what each config parameter maeans:
 
 * `owner`: the URL (WebID) of the person who owns the blog
 * `title`: the title of the blog
