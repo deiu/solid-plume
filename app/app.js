@@ -79,7 +79,16 @@ Plume = (function (window, document) {
     var authors = {};
 
     // Initializer
-    var init = function() {
+    var init = function(configData) {
+        // loaded config from file
+        if (configData) {
+            config = configData;
+            // append trailing slash to data path if missing
+            if (config.defaultPath.lastIndexOf('/') < 0) {
+                config.defaultPath += '/';
+            }
+        }
+
         // Add online/offline events
         Solid.status.onOffline(function(){
             notify('info', "You are no longer connected to the internet.", 3000);
@@ -91,7 +100,10 @@ Plume = (function (window, document) {
         // Set default config values
         document.querySelector('.blog-picture').src = config.picture;
         document.querySelector('.blog-title').innerHTML = config.title;
+        document.querySelector('title').innerHTML = config.title;
         document.querySelector('.blog-tagline').innerHTML = config.tagline;
+        // set default parent element for posts
+        config.postsElement = '.posts';
 
         // try to load config from localStorage
         loadLocalStorage();
@@ -105,8 +117,8 @@ Plume = (function (window, document) {
         if (config.defaultPath.lastIndexOf('/') < 0) {
             config.defaultPath += '/';
         }
-        if (!config.dataContainer || config.dataContainer.length === 0) {
-            config.dataContainer = appURL + config.defaultPath;
+        if (!config.blogURL || config.blogURL.length === 0) {
+            config.blogURL = appURL + config.defaultPath;
         }
 
         config.loadInBg = true;
@@ -126,70 +138,71 @@ Plume = (function (window, document) {
             return;
         } else if (queryVals['blog'] && queryVals['blog'].length > 0) {
             config.loadInBg = false;
-            initContainer(queryVals['blog']);
+            showBlog(queryVals['blog']);
+            return;
         } else {
+            // Load posts or initialize post container
             config.loadInBg = false;
+            if (config.blogURL && config.blogURL.length > 0) {
+                showBlog(config.blogURL);
+            } else {
+                showInitDialog();
+            }
         }
-
-        // initialize post container and/or load posts
-        initContainer();
     };
 
-    // Init data container
-    var initContainer = function(url) {
+    // show a particular blog
+    var showBlog = function(url) {
         // show loading
         if (!config.loadInBg) {
             showLoading();
         }
+        fetchPosts(url);
+    };
 
-        url = url || config.dataContainer;
-
-        // if no default container is set, try to create it
-        if (config.dataContainer.length === 0) {
-            Solid.web.head(url).then(
-                function(container) {
-                    // create data container for posts if it doesn't exist
-                    if (!container.exists && container.err === null) {
-                        Solid.web.post(appURL, config.defaultPath, null, true).then(
-                            function(res) {
-                                if (res.url && res.url.length > 0) {
-                                    config.dataContainer = res.url;
-                                }
-                                // add dummy post
-                                var acme = {
-                                    title: "Welcome to Plume, a Solid blogging platform",
-                                    author: user.webid,
-                                    date: "3 Dec 2015",
-                                    body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post created under your name. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article.\n\nGive it a try, write your first post!",
-                                    tags: [
-                                        { color: "#df2d4f", name: "Decentralization" },
-                                        { color: "#4d85d1", name: "Solid" }
-                                    ]
-                                };
-                                savePost(acme);
+    // Init data container
+    var initContainer = function(url) {
+        Solid.web.head(url).then(
+            function(container) {
+                // create data container for posts if it doesn't exist
+                if (!container.exists && container.err === null) {
+                    Solid.web.post(appURL, config.defaultPath, null, true).then(
+                        function(res) {
+                            if (res.url && res.url.length > 0) {
+                                config.blogURL = res.url;
                             }
-                        )
-                        .catch(
-                            function(err) {
-                                console.log("Could not create data container for posts.");
-                                console.log(err);
-                                notify('error', 'Could not create data container');
-                            }
-                        );
-                    } else if (container.exists) {
-                        config.dataContainer = appURL+config.defaultPath;
-                        fetchPosts(url);
-                    }
+                            // add dummy post
+                            var acme = {
+                                title: "Welcome to Plume, a Solid blogging platform",
+                                author: user.webid,
+                                date: "3 Dec 2015",
+                                body: "```\nHellowWorld();\n```\n\n**Note!** This is a demo post created under your name. Feel free to remove it whenever you wish.\n\n*Plume* is a 100% client-side application built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.\n\nPlume uses [Markdown](https://en.wikipedia.org/wiki/Markdown) to provide you with the easiest and fastest experience for writing beautiful articles. Click the *Edit* button below to see this article.\n\nGive it a try, write your first post!",
+                                tags: [
+                                    { color: "#df2d4f", name: "Decentralization" },
+                                    { color: "#4d85d1", name: "Solid" }
+                                ]
+                            };
+                            savePost(acme);
+                        }
+                    )
+                    .catch(
+                        function(err) {
+                            console.log("Could not create data container for posts.");
+                            console.log(err);
+                            notify('error', 'Could not create data container');
+                        }
+                    );
+                } else if (container.exists) {
+                    config.blogURL = appURL+config.defaultPath;
+                    fetchPosts(url);
                 }
-            );
-        } else {
-            fetchPosts(url);
-        }
+            }
+        );
     }
 
     var login = function() {
         // Get the current user
-        Solid.auth.withWebID(config.dataContainer).then(function(webid){
+        Solid.auth.withWebID(config.blogURL).then(function(webid){
             if (webid.length === 0) {
                 console.log("Could not find WebID from User header, or user is not authenticated. Used "+webid);
             } else if (webid.slice(0, 4) == 'http') {
@@ -213,8 +226,9 @@ Plume = (function (window, document) {
                     if (config.owner == user.webid) {
                         showNewPostButton();
                     }
-                    // save to local storage
+                    // save to local storage and refresh page
                     saveLocalStorage();
+                    window.location.reload();
                 });
             }
         });
@@ -223,6 +237,7 @@ Plume = (function (window, document) {
         user = defaultUser;
         clearLocalStorage();
         showLogin();
+        window.location.reload();
     };
 
     // get profile data for a given user
@@ -348,9 +363,9 @@ Plume = (function (window, document) {
         hideLoading();
         if (err.status === 404) {
             var url = err.xhr.requestedURI;
-            document.querySelector('.init-title').innerHTML = "Could not find URL";
-            document.querySelector('.init-url').innerHTML = document.querySelector('.init-url').href = url;
-            document.querySelector('.init').classList.remove('hidden');
+            document.querySelector('.error-title').innerHTML = "Could not find URL";
+            document.querySelector('.error-url').innerHTML = document.querySelector('.error-url').href = url;
+            document.querySelector('.error').classList.remove('hidden');
             console.log('Could not fetch URL: '+url, err);
         }
     }
@@ -404,12 +419,14 @@ Plume = (function (window, document) {
         back.innerHTML = '≪ Go back';
         buttonList.appendChild(back);
         // add view source
-        var orig = document.createElement('a');
-        orig.classList.add("action-button");
-        orig.href = url;
-        orig.target = '_blank';
-        orig.innerHTML = 'View original';
-        buttonList.appendChild(orig);
+        if (config.showSources) {
+            var src = document.createElement('a');
+            src.classList.add("action-button");
+            src.href = url;
+            src.target = '_blank';
+            src.innerHTML = 'View original';
+            buttonList.appendChild(src);
+        }
         // append button list to viewer
         footer.appendChild(buttonList);
     }
@@ -569,7 +586,7 @@ Plume = (function (window, document) {
             var writer = Solid.web.put(url, triples);
         } else {
             var slug = makeSlug(post.title);
-            var writer = Solid.web.post(config.dataContainer, slug, triples);
+            var writer = Solid.web.post(config.blogURL, slug, triples);
         }
         writer.then(
             function(res) {
@@ -589,8 +606,10 @@ Plume = (function (window, document) {
 
     var fetchPosts = function(url, toElement) {
         // select element holding all the posts
-        toElement = toElement || '.posts';
+        toElement = toElement || config.postsElement;
         var postsdiv = document.querySelector(toElement);
+        // clear previous posts
+        postsdiv.innerHTML = '';
         // ask only for sioc:Post resources
         var resType = SIOC('Post').uri
         Solid.web.getContainer(url, resType).then(
@@ -887,8 +906,7 @@ Plume = (function (window, document) {
         // create title
         var title = document.createElement('h2');
         title.classList.add('post-title');
-        var titleLink = '<a href="'+post.url+'" target="_blank"><span class="fa fa-link"></span></a> <a class="clickable" href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>';
-        title.innerHTML = (post.title)?titleLink:'';
+        title.innerHTML = (post.title)?'<a class="clickable" href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
         // append title to body
         header.appendChild(title);
 
@@ -1230,8 +1248,16 @@ Plume = (function (window, document) {
 
 
 
-    // ----- start app -----
-    init();
+    // ----- INIT -----
+    // start app by loading the config file
+    var http = new XMLHttpRequest();
+    http.open('get', 'config.json');
+    http.onreadystatechange = function() {
+        if (this.readyState == this.DONE) {
+            init(JSON.parse(this.response));
+        }
+    };
+    http.send();
 
 
 
