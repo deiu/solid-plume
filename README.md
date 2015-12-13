@@ -1,6 +1,6 @@
 # Plume
 
-<img src="https://deiu.github.io/solid-plume/img/logo.svg" style="width: 100px;">
+<img src="https://deiu.github.io/solid-plume/img/logo.png">
 
 *Plume* is a 100% client-side blogging platform, built using [Solid standards](https://github.com/solid/), in which data is decoupled from the application itself. This means that you can host the application on any Web server, without having to install anything -- no database, no messing around with Node.js, it has 0 dependencies! It also means that other similar applications will be able to reuse the data resulting from your posts, without having to go through a complicated API.
 
