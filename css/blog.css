@@ -556,10 +556,6 @@ pre {
     text-decoration: none;
 }
 
-.start a {
-    zoom: 1.5;
-}
-
 .pure-img-responsive {
     max-width: 100%;
     height: auto;

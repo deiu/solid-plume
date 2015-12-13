@@ -80,6 +80,14 @@ Plume = (function (window, document) {
 
     // Initializer
     var init = function() {
+        // Add online/offline events
+        Solid.status.onOffline(function(){
+            notify('info', "You are no longer connected to the internet.", 3000);
+        });
+        Solid.status.onOnline(function(){
+            notify('info', "And we're back!");
+        });
+
         // Set default config values
         document.querySelector('.blog-picture').src = config.picture;
         document.querySelector('.blog-title').innerHTML = config.title;
@@ -137,11 +145,11 @@ Plume = (function (window, document) {
 
         // if no default container is set, try to create it
         if (config.dataContainer.length === 0) {
-            Solid.resourceStatus(url).then(
+            Solid.io.head(url).then(
                 function(container) {
                     // create data container for posts if it doesn't exist
                     if (!container.exists && container.err === null) {
-                        Solid.newResource(appURL, config.defaultPath, null, true).then(
+                        Solid.io.post(appURL, config.defaultPath, null, true).then(
                             function(res) {
                                 if (res.url && res.url.length > 0) {
                                     config.dataContainer = res.url;
@@ -180,7 +188,7 @@ Plume = (function (window, document) {
 
     var login = function() {
         // Get the current user
-        Solid.isAuthenticated(config.dataContainer).then(function(webid){
+        Solid.auth.withWebID(config.dataContainer).then(function(webid){
             if (webid.length === 0) {
                 console.log("Could not find WebID from User header, or user is not authenticated. Used "+webid);
             } else if (webid.slice(0, 4) == 'http') {
@@ -189,7 +197,7 @@ Plume = (function (window, document) {
                 user.authenticated = true;
                 hideLogin();
                 // fetch and set user profile
-                Solid.getWebIDProfile(webid).then(function(g) {
+                Solid.identity.getProfile(webid).then(function(g) {
                     return getUserProfile(webid, g);
                 }).then(function(profile){
                     user.name = profile.name;
@@ -310,7 +318,7 @@ Plume = (function (window, document) {
 
     var deletePost = function(url) {
         if (url) {
-            Solid.deleteResource(url).then(
+            Solid.io.del(url).then(
                 function(done) {
                     if (done) {
                         delete posts[url];
@@ -397,6 +405,11 @@ Plume = (function (window, document) {
     }
 
     var showEditor = function(url) {
+        if (!user.authenticated) {
+            notify('all', "You must log in before creating or editing posts.");
+            return;
+        }
+
         // make sure we're entering in edit mode
         if (editor.isPreviewActive()) {
             togglePreview();
@@ -543,10 +556,10 @@ Plume = (function (window, document) {
         var triples = new $rdf.Serializer(g).toN3(g);
 
         if (url) {
-            var writer = Solid.putResource(url, triples);
+            var writer = Solid.io.put(url, triples);
         } else {
             var slug = makeSlug(post.title);
-            var writer = Solid.newResource(config.dataContainer, slug, triples);
+            var writer = Solid.io.post(config.dataContainer, slug, triples);
         }
         writer.then(
             function(res) {
@@ -570,12 +583,14 @@ Plume = (function (window, document) {
         var postsdiv = document.querySelector(toElement);
         // ask only for sioc:Post resources
         var resType = SIOC('Post').uri
-        Solid.getContainerResources(url, resType).then(
+        Solid.io.getContainer(url, resType).then(
             function(statements) {
                 if (statements.length === 0) {
                     resetAll();
                     hideLoading();
-                    document.querySelector('.start').classList.remove('hidden');
+                    if (user.authenticated) {
+                        document.querySelector('.start').classList.remove('hidden');
+                    }
                 }
 
                 var toLoad = statements.length;
@@ -642,7 +657,7 @@ Plume = (function (window, document) {
 
     var fetchPost = function(url) {
         var promise = new Promise(function(resolve, reject){
-            Solid.getResource(url).then(
+            Solid.io.get(url).then(
                 function(g) {
                     var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
 
@@ -732,7 +747,7 @@ Plume = (function (window, document) {
             return;
         }
         authors[webid].lock = true;
-        Solid.getWebIDProfile(webid).then(function(g) {
+        Solid.identity.getProfile(webid).then(function(g) {
             getUserProfile(webid, g).then(
                 function(profile) {
                     authors[webid].updated = true;
@@ -1056,7 +1071,9 @@ Plume = (function (window, document) {
         if (posts && len(posts) === 0) {
             document.querySelector('.start').classList.remove('hidden');
         } else {
-            document.querySelector('.start').classList.add('hidden');
+            if (user.authenticated) {
+                document.querySelector('.start').classList.add('hidden');
+            }
         }
 
         window.history.pushState("", document.querySelector('title').value, window.location.pathname);

@@ -1,6 +1,7 @@
 var Solid = Solid || {};
 
-Solid = (function(window) {
+// LDP operations
+Solid.io = (function(window) {
     'use strict';
 
     // Init some defaults;
@@ -18,54 +19,11 @@ Solid = (function(window) {
     var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
     var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
 
-    // return the current user's WebID from the User header if authenticated
-    // resolve(string)
-    var isAuthenticated = function(url) {
-        if (!url || url.length === 0) {
-            url = window.location.origin+window.location.pathname;
-        }
-        return new Promise(function(resolve){
-            var http = new XMLHttpRequest();
-            http.open('HEAD', url);
-            http.onreadystatechange = function() {
-                if (this.readyState == this.DONE) {
-                    if (this.status === 200) {
-                        var user = (this.getResponseHeader('User'))?this.getResponseHeader('User'):'';
-                    } else {
-                        var user = '';
-                    }
-                    resolve(user);
-                }
-            };
-            http.send();
-        });
-    };
-
-    // fetch an RDF resource
-    // resolve(graph) | reject(this)
-    var getResource = function(url) {
-        var promise = new Promise(function(resolve, reject) {
-            var g = new $rdf.graph();
-            var f = new $rdf.fetcher(g, TIMEOUT);
-
-            var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
-            f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
-                if (!ok) {
-                    reject({ok: ok, status: xhr.status, body: body, xhr: xhr, g: g});
-                } else {
-                    resolve(g);
-                }
-            });
-        });
-
-        return promise;
-    };
-
     // returns an array of all the resources within an LDP container
     // resolve(array[statement]) | reject
-    var getContainerResources = function(url, type) {
+    var getContainer = function(url, type) {
         var promise = new Promise(function(resolve, reject) {
-            getResource(url).then(
+            get(url).then(
                 function(g) {
                     if (type && type.length > 0) {
                         var st = g.statementsMatching(undefined, RDF('type'), $rdf.sym(type));
@@ -84,88 +42,6 @@ Solid = (function(window) {
             .catch(
                 function(err) {
                     reject(err);
-                }
-            );
-        });
-
-        return promise;
-    };
-
-    // fetch user profile (follow sameAs links) and return promise with a graph
-    // resolve(graph)
-    var getWebIDProfile = function(url) {
-        var promise = new Promise(function(resolve) {
-            // Load main profile
-            getResource(url).then(
-                function(graph) {
-                    // find additional resources to load
-                    var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
-                    var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
-                    var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
-                    var toLoad = sameAs.length + seeAlso.length + prefs.length;
-
-                    var checkAll = function() {
-                        if (toLoad === 0) {
-                            return resolve(graph);
-                        }
-                    }
-                    // Load sameAs files
-                    if (sameAs.length > 0) {
-                        sameAs.forEach(function(same){
-                            getResource(same.object.value, same.object.value).then(
-                                function(g) {
-                                    addGraph(graph, g);
-                                    toLoad--;
-                                    checkAll();
-                                }
-                            ).catch(
-                            function(err){
-                                console.log(err);
-                                toLoad--;
-                                checkAll();
-                            });
-                        });
-                    }
-                    // Load seeAlso files
-                    if (seeAlso.length > 0) {
-                        seeAlso.forEach(function(see){
-                            getResource(see.object.value).then(
-                                function(g) {
-                                    addGraph(graph, g, see.object.value);
-                                    toLoad--;
-                                    checkAll();
-                                }
-                            ).catch(
-                            function(err){
-                                console.log(err);
-                                toLoad--;
-                                checkAll();
-                            });
-                        });
-                    }
-                    // Load preferences files
-                    if (prefs.length > 0) {
-                        prefs.forEach(function(pref){
-                            getResource(pref.object.value).then(
-                                function(g) {
-                                    addGraph(graph, g, pref.object.value);
-                                    toLoad--;
-                                    checkAll();
-                                }
-                            ).catch(
-                            function(err){
-                                console.log(err);
-                                toLoad--;
-                                checkAll();
-                            });
-                        });
-                    }
-                }
-            )
-            .catch(
-                function(err) {
-                    console.log("No user: "+g);
-                    resolve(err.g);
                 }
             );
         });
@@ -196,7 +72,7 @@ Solid = (function(window) {
 
     // check if a resource exists and return useful Solid info (acl, meta, type, etc)
     // resolve(metaObj)
-    var resourceStatus = function(url) {
+    var head = function(url) {
         var promise = new Promise(function(resolve) {
             var http = new XMLHttpRequest();
             http.open('HEAD', url);
@@ -211,9 +87,29 @@ Solid = (function(window) {
         return promise;
     };
 
+    // fetch an RDF resource
+    // resolve(graph) | reject(this)
+    var get = function(url) {
+        var promise = new Promise(function(resolve, reject) {
+            var g = new $rdf.graph();
+            var f = new $rdf.fetcher(g, TIMEOUT);
+
+            var docURI = (url.indexOf('#') >= 0)?url.slice(0, url.indexOf('#')):url;
+            f.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr) {
+                if (!ok) {
+                    reject({ok: ok, status: xhr.status, body: body, xhr: xhr, g: g});
+                } else {
+                    resolve(g);
+                }
+            });
+        });
+
+        return promise;
+    };
+
     // create new resource
     // resolve(metaObj) | reject
-    var newResource = function(url, slug, data, isContainer) {
+    var post = function(url, slug, data, isContainer) {
         var resType = (isContainer)?'http://www.w3.org/ns/ldp#BasicContainer':'http://www.w3.org/ns/ldp#Resource';
         var promise = new Promise(function(resolve, reject) {
             var http = new XMLHttpRequest();
@@ -245,7 +141,7 @@ Solid = (function(window) {
 
     // update/create resource using HTTP PUT
     // resolve(metaObj) | reject
-    var putResource = function(url, data) {
+    var put = function(url, data) {
         var promise = new Promise(function(resolve, reject) {
             var http = new XMLHttpRequest();
             http.open('PUT', url);
@@ -272,7 +168,7 @@ Solid = (function(window) {
 
     // delete a resource
     // resolve(true) | reject
-    var deleteResource = function(url) {
+    var del = function(url) {
         var promise = new Promise(function(resolve, reject) {
             var http = new XMLHttpRequest();
             http.open('DELETE', url);
@@ -327,14 +223,181 @@ Solid = (function(window) {
 
     // return public methods
     return {
+        getContainer: getContainer,
+        head: head,
+        get: get,
+        post: post,
+        put: put,
+        del: del,
         parseLinkHeader: parseLinkHeader,
-        isAuthenticated: isAuthenticated,
-        getResource: getResource,
-        getContainerResources: getContainerResources,
-        getWebIDProfile: getWebIDProfile,
-        resourceStatus: resourceStatus,
-        newResource: newResource,
-        putResource: putResource,
-        deleteResource: deleteResource
+    };
+}(this));
+
+// Identity / WebID
+Solid.identity = (function(window) {
+    // fetch user profile (follow sameAs links) and return promise with a graph
+    // resolve(graph)
+    var getProfile = function(url) {
+        var promise = new Promise(function(resolve) {
+            // Load main profile
+            Solid.get(url).then(
+                function(graph) {
+                    // find additional resources to load
+                    var sameAs = graph.statementsMatching($rdf.sym(url), OWL('sameAs'), undefined);
+                    var seeAlso = graph.statementsMatching($rdf.sym(url), OWL('seeAlso'), undefined);
+                    var prefs = graph.statementsMatching($rdf.sym(url), PIM('preferencesFile'), undefined);
+                    var toLoad = sameAs.length + seeAlso.length + prefs.length;
+
+                    var checkAll = function() {
+                        if (toLoad === 0) {
+                            return resolve(graph);
+                        }
+                    }
+                    // Load sameAs files
+                    if (sameAs.length > 0) {
+                        sameAs.forEach(function(same){
+                            Solid.get(same.object.value, same.object.value).then(
+                                function(g) {
+                                    addGraph(graph, g);
+                                    toLoad--;
+                                    checkAll();
+                                }
+                            ).catch(
+                            function(err){
+                                console.log(err);
+                                toLoad--;
+                                checkAll();
+                            });
+                        });
+                    }
+                    // Load seeAlso files
+                    if (seeAlso.length > 0) {
+                        seeAlso.forEach(function(see){
+                            Solid.get(see.object.value).then(
+                                function(g) {
+                                    addGraph(graph, g, see.object.value);
+                                    toLoad--;
+                                    checkAll();
+                                }
+                            ).catch(
+                            function(err){
+                                console.log(err);
+                                toLoad--;
+                                checkAll();
+                            });
+                        });
+                    }
+                    // Load preferences files
+                    if (prefs.length > 0) {
+                        prefs.forEach(function(pref){
+                            Solid.get(pref.object.value).then(
+                                function(g) {
+                                    addGraph(graph, g, pref.object.value);
+                                    toLoad--;
+                                    checkAll();
+                                }
+                            ).catch(
+                            function(err){
+                                console.log(err);
+                                toLoad--;
+                                checkAll();
+                            });
+                        });
+                    }
+                }
+            )
+            .catch(
+                function(err) {
+                    console.log("No user: "+g);
+                    resolve(err.g);
+                }
+            );
+        });
+
+        return promise;
+    };
+
+    // return public methods
+    return {
+        getProfile: getProfile,
+    };
+}(this));
+
+// Authentication
+Solid.auth = (function(window) {
+    // return the current user's WebID from the User header if authenticated
+    // resolve(string)
+    var withWebID = function(url) {
+        if (!url || url.length === 0) {
+            url = window.location.origin+window.location.pathname;
+        }
+        return new Promise(function(resolve){
+            var http = new XMLHttpRequest();
+            http.open('HEAD', url);
+            http.onreadystatechange = function() {
+                if (this.readyState == this.DONE) {
+                    if (this.status === 200) {
+                        var user = (this.getResponseHeader('User'))?this.getResponseHeader('User'):'';
+                    } else {
+                        var user = '';
+                    }
+                    resolve(user);
+                }
+            };
+            http.send();
+        });
+    };
+
+    // Listen to login messages from child window/iframe
+    var wait = function() {
+        var promise = new Promise(function(resolve, reject){
+            var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            var eventListener = window[eventMethod];
+            var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+            eventListener(messageEvent,function(e) {
+                console.log(e);
+                var u = e.data;
+                if (u.slice(0,5) == 'User:') {
+                    var user = u.slice(5, u.length);
+                    if (user && user.length > 0 && user.slice(0,4) == 'http') {
+                        return resolve(user);
+                    } else {
+                        return reject(user);
+                    }
+                }
+            },false);
+        });
+
+        return promise;
+    };
+
+    // return public methods
+    return {
+        withWebID: withWebID,
+        wait, wait
+    };
+}(this));
+
+// Events
+Solid.status = (function(window) {
+    // Get current online status
+    var isOnline = function() {
+        return window.navigator.onLine;
+    };
+
+    // Is offline
+    var onOffline = function(callback) {
+        window.addEventListener("offline", callback, false);
+    };
+    // Is online
+    var onOnline = function(callback) {
+        window.addEventListener("online", callback, false);
+    };
+
+    // return public methods
+    return {
+        isOnline: isOnline,
+        onOffline: onOffline,
+        onOnline: onOnline,
     };
 }(this));
