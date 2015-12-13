@@ -1,0 +1,10 @@
+{
+    "owner": "",
+    "title": "Plume",
+    "tagline": "Light as a feather",
+    "picture": "img/logo.svg",
+    "fadeText": true,
+    "cacheUnit": "days",
+    "defaultPath": "posts",
+    "blogURLs": ["https://localhost:8443/plume/posts/"]
+}
