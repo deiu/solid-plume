@@ -12,5 +12,5 @@ Plume.config = {
     fadeText: true,
     cacheUnit: 'days',
     defaultPath: 'posts',
-    blogURLs: []
+    blogURLs: ['https://localhost:8443/plume/posts/']
 };

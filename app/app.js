@@ -5,12 +5,8 @@ var Plume = Plume || {};
 Plume = (function (window, document) {
     'use strict';
 
-    var config = Plume.config || {};
+    var config = {};
 
-    // append trailing slash to data path if missing
-    if (config.defaultPath.lastIndexOf('/') < 0) {
-        config.defaultPath += '/';
-    }
     var appURL = window.location.origin+window.location.pathname;
 
     // RDF
@@ -90,15 +86,25 @@ Plume = (function (window, document) {
     var sortedPosts = [];
 
     // Initializer
-    var init = function() {
+    var init = function(configData) {
+        // loaded config from file
+        if (configData) {
+            config = configData;
+            // append trailing slash to data path if missing
+            if (config.defaultPath.lastIndexOf('/') < 0) {
+                config.defaultPath += '/';
+            }
+        }
+
         // Set default config values
         document.querySelector('.blog-picture').src = config.picture;
         document.querySelector('.blog-title').innerHTML = config.title;
         document.querySelector('.blog-tagline').innerHTML = config.tagline;
+        // set default parent element for posts
+        config.postsElement = '.posts';
 
         // try to load config from localStorage
         loadLocalConfig();
-        config.postsElement = '.posts';
 
         if (user.authenticated) {
             hideLogin();
@@ -132,7 +138,7 @@ Plume = (function (window, document) {
 
     var login = function() {
         // Get the current user
-        Solid.isAuthenticated(config.dataContainer).then(function(webid){
+        Solid.auth.withWebID(config.dataContainer).then(function(webid){
             if (webid.length === 0) {
                 console.log("Could not find WebID from User header, or user is not authenticated. Used "+webid);
             } else if (webid.slice(0, 4) == 'http') {
@@ -141,7 +147,7 @@ Plume = (function (window, document) {
                 user.authenticated = true;
                 hideLogin();
                 // fetch and set user profile
-                Solid.getWebIDProfile(webid).then(function(g) {
+                Solid.identity.getProfile(webid).then(function(g) {
                     return getUserProfile(webid, g);
                 }).then(function(profile){
                     user.name = profile.name;
@@ -263,7 +269,7 @@ Plume = (function (window, document) {
     };
 
     var deletePost = function(url) {
-        Solid.delete(url).then(
+        Solid.web.del(url).then(
             function(done) {
                 console.log("Deleted ", url);
                 // delete entry from blogs
@@ -312,8 +318,7 @@ Plume = (function (window, document) {
                 }
             ).catch(
                 function(err) {
-                    console.log(err);
-                    hideLoading();
+                    showError(err);
                 }
             );
             return;
@@ -447,40 +452,39 @@ Plume = (function (window, document) {
             // update publish button
             document.querySelector('.publish').innerHTML = "Publish";
             document.querySelector('.publish').setAttribute('onclick', 'Plume.publishPost()');
-            // add blog sources
-            if (len(blogs) > 0) {
-                var select = document.querySelector('.editor-blog');
-                select.classList.remove('hidden');
-                select.addEventListener('change', function() {
-                    // enable button
+        }
+        // add blog sources
+        if (len(blogs) > 0) {
+            var select = document.querySelector('.editor-blog');
+            select.classList.remove('hidden');
+            select.addEventListener('change', function() {
+                // enable button
+                var btn = document.querySelector('.publish');
+                if (select.value != '') {
+                    btn.disabled = false;
+                    btn.classList.add('success');
+                    btn.classList.remove('disabled');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.remove('success');
+                    btn.classList.add('disabled');
+                }
+            }, false);
+
+            // editor-blog-urls
+            var options = document.querySelector('.editor-blog-options');
+            Object.keys(blogs).forEach(function(blog) {
+                var option = document.createElement('option');
+                option.innerHTML = option.value = blogs[blog].url;
+                if (len(blogs) === 1) {
+                    option.selected = true;
                     var btn = document.querySelector('.publish');
-                    if (select.value != '') {
-                        btn.disabled = false;
-                        btn.classList.add('success');
-                        btn.classList.remove('disabled');
-                    } else {
-                        btn.disabled = true;
-                        btn.classList.remove('success');
-                        btn.classList.add('disabled');
-                    }
-                }, false);
-
-
-                // editor-blog-urls
-                var options = document.querySelector('.editor-blog-options');
-                Object.keys(blogs).forEach(function(blog) {
-                    var option = document.createElement('option');
-                    option.innerHTML = option.value = blogs[blog].url;
-                    if (len(blogs) === 1) {
-                        option.selected = true;
-                        var btn = document.querySelector('.publish');
-                        btn.disabled = false;
-                        btn.classList.add('success');
-                        btn.classList.remove('disabled');
-                    }
-                    select.appendChild(option);
-                });
-            }
+                    btn.disabled = false;
+                    btn.classList.add('success');
+                    btn.classList.remove('disabled');
+                }
+                select.appendChild(option);
+            });
         }
     };
 
@@ -558,10 +562,10 @@ Plume = (function (window, document) {
             var triples = new $rdf.Serializer(g).toN3(g);
 
             if (url) {
-                var writer = Solid.put(url, triples);
+                var writer = Solid.web.put(url, triples);
             } else {
                 var slug = makeSlug(post.title);
-                var writer = Solid.post(post.blog, slug, triples);
+                var writer = Solid.web.post(post.blog, slug, triples);
             }
             writer.then(
                 function(res) {
@@ -586,11 +590,11 @@ Plume = (function (window, document) {
         }
 
         // if no default container is set, try to create it
-        Solid.resourceStatus(url).then(
+        Solid.web.head(url).then(
             function(container) {
                 // create data container for posts if it doesn't exist
                 if (!container.exists && container.err === null) {
-                    Solid.post(appURL, config.defaultPath, null, true).then(
+                    Solid.web.post(appURL, config.defaultPath, null, true).then(
                         function(res) {
                             if (res.url && res.url.length > 0) {
                                 config.dataContainer = res.url;
@@ -638,7 +642,6 @@ Plume = (function (window, document) {
 
         if (config.blogURLs && config.blogURLs.length > 0) {
             config.blogURLs.forEach(function(blog) {
-                console.log(blog);
                 fetchBlog(blog);
             });
         } else {
@@ -655,7 +658,7 @@ Plume = (function (window, document) {
             fetchPosts(blogs[url].posts);
         }
         // ask only for sioc:Post resources
-        Solid.get(url).then(
+        Solid.web.get(url).then(
             function(g) {
                 var statements = g.statementsMatching(undefined, RDF('type'), SIOC('Post'));
                 if (statements.length === 0) {
@@ -687,8 +690,7 @@ Plume = (function (window, document) {
         )
         .catch(
             function(err) {
-                console.log('Could not fetch contents from data container.',err);
-                hideLoading();
+                showError(err);
             }
         );
     };
@@ -716,7 +718,7 @@ Plume = (function (window, document) {
             )
             .catch(
                 function(err) {
-                    console.log('Could not fetch post from: '+url+' Reason: ', err);
+                    showError(err);
                     toLoad--;
                     isDone();
                 }
@@ -732,7 +734,7 @@ Plume = (function (window, document) {
                 fetchPost(url, blogURL, true);
             } else {
                 // fetch the resource
-                Solid.get(url).then(
+                Solid.web.get(url).then(
                     function(g) {
                         var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
 
@@ -811,7 +813,6 @@ Plume = (function (window, document) {
                 )
                 .catch(
                     function(err) {
-                        console.log('Could not fetch post from: '+url+' HTTP '+err);
                         reject(err);
                     }
                 );
@@ -869,7 +870,7 @@ Plume = (function (window, document) {
             return;
         }
         authors[webid].lock = true;
-        Solid.getWebIDProfile(webid).then(function(g) {
+        Solid.identity.getProfile(webid).then(function(g) {
             getUserProfile(webid, g).then(
                 function(profile) {
                     authors[webid].updated = true;
@@ -1062,6 +1063,20 @@ Plume = (function (window, document) {
 
     var sortTag = function(name) {
         console.log(name);
+    };
+
+    var showError = function(err) {
+        if (!err) {
+            return;
+        }
+        hideLoading();
+        if (err.status === 404) {
+            var url = err.xhr.requestedURI;
+            document.querySelector('.error-title').innerHTML = "Could not find URL";
+            document.querySelector('.error-url').innerHTML = document.querySelector('.error-url').href = url;
+            document.querySelector('.error').classList.remove('hidden');
+            console.log('Could not fetch URL: '+url, err);
+        }
     };
 
     // Misc/helper functions
@@ -1364,9 +1379,15 @@ Plume = (function (window, document) {
         }
     };
 
-    // start app
-    init();
-
+    // start app by loading the config file
+    var http = new XMLHttpRequest();
+    http.open('get', 'config.json');
+    http.onreadystatechange = function() {
+        if (this.readyState == this.DONE) {
+            init(JSON.parse(this.response));
+        }
+    };
+    http.send();
 
 
     // return public functions

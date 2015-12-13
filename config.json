@@ -6,5 +6,5 @@
     "fadeText": true,
     "cacheUnit": "days",
     "defaultPath": "posts",
-    "blogURLs": ["https://localhost:8443/plume/posts/"]
+    "blogURLs": ["https://deiu.me/blog/posts/", "https://localhost:8443/plume/posts/"]
 }
