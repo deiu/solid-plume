@@ -209,14 +209,8 @@ Solid.identity = (function(window) {
 
     $rdf.Fetcher.crossSiteProxyTemplate = PROXY;
     // common vocabs
-    var RDF = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-    var RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
-    var FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/");
     var OWL = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
     var PIM = $rdf.Namespace("http://www.w3.org/ns/pim/space#");
-    var UI = $rdf.Namespace("http://www.w3.org/ns/ui#");
-    var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
-    var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
 
     // fetch user profile (follow sameAs links) and return promise with a graph
     // resolve(graph)

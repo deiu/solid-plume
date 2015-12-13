@@ -124,7 +124,12 @@ Plume = (function (window, document) {
         config.loadInBg = true;
 
         // basic app routes
-        if (queryVals['view'] && queryVals['view'].length > 0) {
+        if (queryVals['post'] && queryVals['post'].length > 0) {
+            var url = decodeURIComponent(queryVals['post']);
+            showViewer(url);
+            return;
+        } else if (queryVals['view'] && queryVals['view'].length > 0) {
+            // legacy [to be deprecated]
             var url = decodeURIComponent(queryVals['view']);
             showViewer(url);
             return;
@@ -371,7 +376,7 @@ Plume = (function (window, document) {
     }
 
     var showViewer = function(url) {
-        window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?view="+encodeURIComponent(url));
+        window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?post="+encodeURIComponent(url));
         // hide main page
         document.querySelector(config.postsElement).classList.add('hidden');
         var viewer = document.querySelector('.viewer');
@@ -906,7 +911,7 @@ Plume = (function (window, document) {
         // create title
         var title = document.createElement('h2');
         title.classList.add('post-title');
-        title.innerHTML = (post.title)?'<a class="clickable" href="?view='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
+        title.innerHTML = (post.title)?'<a class="clickable" href="?post='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
         // append title to body
         header.appendChild(title);
 
@@ -920,7 +925,7 @@ Plume = (function (window, document) {
         // add post body
         if (makeLink) {
             section.classList.add('clickable');
-            section.addEventListener('click', function (event) { window.location.replace('?view='+encodeURIComponent(post.url))});
+            section.addEventListener('click', function (event) { window.location.replace('?post='+encodeURIComponent(post.url))});
         }
         section.innerHTML += bodyText;
 
@@ -969,7 +974,7 @@ Plume = (function (window, document) {
                 var fade = document.createElement('div');
                 fade.classList.add('fade-bottom');
                 fade.classList.add('center-text');
-                fade.innerHTML = '<a href="?view='+encodeURIComponent(url)+'" class="no-decoration clickable">&mdash; '+"more &mdash;</a>";
+                fade.innerHTML = '<a href="?post='+encodeURIComponent(url)+'" class="no-decoration clickable">&mdash; '+"more &mdash;</a>";
                 article.insertBefore(fade, article.querySelector('footer'));
             }
         }
