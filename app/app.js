@@ -421,7 +421,7 @@ Plume = (function (window, document) {
         var back = document.createElement('a');
         back.classList.add("action-button");
         back.href = window.location.pathname;
-        back.innerHTML = '≪ Go back';
+        back.innerHTML = '≪ Back to blog';
         buttonList.appendChild(back);
         // add view source
         if (config.showSources) {
@@ -429,7 +429,7 @@ Plume = (function (window, document) {
             src.classList.add("action-button");
             src.href = url;
             src.target = '_blank';
-            src.innerHTML = 'View original';
+            src.innerHTML = 'View data';
             buttonList.appendChild(src);
         }
         // append button list to viewer
@@ -596,7 +596,7 @@ Plume = (function (window, document) {
         writer.then(
             function(res) {
                 // all done, clean up and go to initial state
-                cancelPost();
+                cancelPost('?post='+encodeURIComponent(res.url));
             }
         )
         .catch(
@@ -1104,9 +1104,10 @@ Plume = (function (window, document) {
         document.querySelector('.editor-add-tag').focus();
     };
 
-    var cancelPost = function() {
+    var cancelPost = function(url) {
         clearPendingPost();
-        window.location.replace(window.location.pathname);
+        url = (url)?url:window.location.pathname;
+        window.location.replace(url);
     };
 
     // reset to initial view
