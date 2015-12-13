@@ -616,10 +616,23 @@ Plume = (function (window, document) {
         // clear previous posts
         postsdiv.innerHTML = '';
         // ask only for sioc:Post resources
-        var resType = SIOC('Post').uri
-        Solid.web.getContainer(url, resType).then(
-            function(statements) {
-                if (statements.length === 0) {
+        Solid.web.get(url).then(
+            function(g) {
+                var _posts = [];
+                var st = g.statementsMatching(undefined, RDF('type'), SIOC('Post'));
+                // fallback to containment triples
+                if (st.length === 0) {
+                    st = g.statementsMatching($rdf.sym(url), LDP('contains'), undefined);
+                    st.forEach(function(s) {
+                        _posts.push(s.object.uri);
+                    });
+                } else {
+                    st.forEach(function(s) {
+                        _posts.push(s.subject.uri);
+                    });
+                }
+
+                if (_posts.length === 0) {
                     resetAll();
                     hideLoading();
                     if (user.authenticated) {
@@ -627,7 +640,7 @@ Plume = (function (window, document) {
                     }
                 }
 
-                var toLoad = statements.length;
+                var toLoad = _posts.length;
                 var isDone = function() {
                     if (toLoad <= 0) {
                         hideLoading();
@@ -635,9 +648,7 @@ Plume = (function (window, document) {
                 }
 
                 var sortedPosts = [];
-                statements.forEach(function(s){
-                    var url = s.subject.uri;
-
+                _posts.forEach(function(url){
                     fetchPost(url).then(
                         function(post) {
                             // convert post to HTML
