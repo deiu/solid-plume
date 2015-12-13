@@ -117,8 +117,8 @@ Plume = (function (window, document) {
         if (config.defaultPath.lastIndexOf('/') < 0) {
             config.defaultPath += '/';
         }
-        if (!config.blogURL || config.blogURL.length === 0) {
-            config.blogURL = appURL + config.defaultPath;
+        if (!config.postsURL || config.postsURL.length === 0) {
+            config.postsURL = appURL + config.defaultPath;
         }
 
         config.loadInBg = true;
@@ -143,8 +143,8 @@ Plume = (function (window, document) {
         } else {
             // Load posts or initialize post container
             config.loadInBg = false;
-            if (config.blogURL && config.blogURL.length > 0) {
-                showBlog(config.blogURL);
+            if (config.postsURL && config.postsURL.length > 0) {
+                showBlog(config.postsURL);
             } else {
                 showInitDialog();
             }
@@ -169,7 +169,7 @@ Plume = (function (window, document) {
                     Solid.web.post(appURL, config.defaultPath, null, true).then(
                         function(res) {
                             if (res.url && res.url.length > 0) {
-                                config.blogURL = res.url;
+                                config.postsURL = res.url;
                             }
                             // add dummy post
                             var acme = {
@@ -193,7 +193,7 @@ Plume = (function (window, document) {
                         }
                     );
                 } else if (container.exists) {
-                    config.blogURL = appURL+config.defaultPath;
+                    config.postsURL = appURL+config.defaultPath;
                     fetchPosts(url);
                 }
             }
@@ -202,7 +202,7 @@ Plume = (function (window, document) {
 
     var login = function() {
         // Get the current user
-        Solid.auth.withWebID(config.blogURL).then(function(webid){
+        Solid.auth.withWebID(config.postsURL).then(function(webid){
             if (webid.length === 0) {
                 console.log("Could not find WebID from User header, or user is not authenticated. Used "+webid);
             } else if (webid.slice(0, 4) == 'http') {
@@ -586,7 +586,7 @@ Plume = (function (window, document) {
             var writer = Solid.web.put(url, triples);
         } else {
             var slug = makeSlug(post.title);
-            var writer = Solid.web.post(config.blogURL, slug, triples);
+            var writer = Solid.web.post(config.postsURL, slug, triples);
         }
         writer.then(
             function(res) {
