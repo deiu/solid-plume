@@ -5,13 +5,13 @@
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 300;
-  src: local('Roboto Light'), local('Roboto-Light'), url(fonts/roboto-light.ttf) format('truetype');
+  src: url('fonts/roboto-light.eot') format('embedded-opentype'),url('fonts/roboto-light.woff') format('woff'), url('fonts/roboto-light.ttf') format('truetype');
 }
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: local('Roboto'), local('Roboto-Regular'), url(fonts/roboto-regular.ttf) format('truetype');
+  src: url('fonts/roboto-regular.eot') format('embedded-opentype'),url('fonts/roboto-regular.woff') format('woff'), url('fonts/roboto-regular.ttf') format('truetype');
 }
 
 html {
