@@ -1220,8 +1220,7 @@ Plume = (function (window, document) {
     var saveLocalStorage = function() {
         var data = {
             user: user,
-            config: config,
-            authors: authors
+            config: config
         };
         try {
             localStorage.setItem(appURL, JSON.stringify(data));

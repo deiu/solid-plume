@@ -346,7 +346,8 @@ a.editor-author, a.editor-author:visited {
     z-index: 10;
     top: 50%;
     left: 50%;
-    border: 2px solid #777;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 4px #eee;
     border-radius: 5px;
     -webkit-transform: translateX(-50%) translateY(-50%);
     -moz-transform: translateX(-50%) translateY(-50%);
