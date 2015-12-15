@@ -413,6 +413,11 @@ Plume = (function (window, document) {
             return;
         }
 
+        // Update document title
+        if (posts[url] && posts[url].title) {
+            document.querySelector('title').innerHTML += ' - ' + posts[url].title;
+        }
+
         // add last modified date
         if (posts[url].modified && posts[url].modified != posts[url].created) {
             var modDate = document.createElement('p');
@@ -486,6 +491,8 @@ Plume = (function (window, document) {
             var post = posts[url];
             if (post.title) {
                 document.querySelector('.editor-title').value = post.title;
+                // Also update document title
+                document.querySelector('title').innerHTML += ' - Editing - ' + posts[url].title;
             }
             if (post.author) {
                 var author = getAuthorByWebID(post.author);
