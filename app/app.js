@@ -170,7 +170,7 @@ Plume = (function (window, document) {
         Solid.web.head(url).then(
             function(container) {
                 // create data container for posts if it doesn't exist
-                if (!container.exists && container.err === null) {
+                if (!container.exists && container.xhr.status < 500) {
                     Solid.web.post(appURL, config.defaultPath, null, true).then(
                         function(res) {
                             if (res.url && res.url.length > 0) {
@@ -205,44 +205,55 @@ Plume = (function (window, document) {
         );
     }
 
+    // Log user in
     var login = function() {
         // Get the current user
-        Solid.auth.withWebID(config.postsURL).then(function(webid){
-            if (webid.length === 0) {
-                console.log("Could not find WebID from User header, or user is not authenticated. Used "+webid);
-            } else if (webid.slice(0, 4) == 'http') {
-                // set WebID
-                user.webid = webid;
-                user.authenticated = true;
-                hideLogin();
-                // fetch and set user profile
-                Solid.identity.getProfile(webid).then(function(g) {
-                    return getUserProfile(webid, g);
-                }).then(function(profile){
-                    user.name = profile.name;
-                    user.picture = profile.picture;
-                    user.date = Date.now();
-                    // add self to authors list
-                    authors[webid] = user;
-                    // save list
-                    saveLocalAuthors();
-
-                    // add new post button if owner
-                    if (config.owner == user.webid) {
-                        showNewPostButton();
-                    }
-                    // save to local storage and refresh page
-                    saveLocalStorage();
-                    window.location.reload();
-                });
-            }
+        Solid.auth.login().then(function(webid){
+            gotWebID(webid);
+        }).catch(function(err) {
+            notify('error', "Authentication failed");
+            showError(err);
         });
     };
+    // Signup for a WebID and space
+    var signup = function() {
+        Solid.auth.signup().then(function(webid) {
+            gotWebID(webid);
+        }).catch(function(err) {
+            console.log("Err", err);
+            notify('error', "Authentication failed");
+            showError(err);
+        });
+    };
+    // Log user out
     var logout = function() {
         user = defaultUser;
         clearLocalStorage();
         showLogin();
         window.location.reload();
+    };
+
+    // set the logged in user
+    var gotWebID = function(webid) {
+        // set WebID
+        user.webid = webid;
+        user.authenticated = true;
+        hideLogin();
+        // fetch and set user profile
+        Solid.identity.getProfile(webid).then(function(g) {
+            var profile = getUserProfile(webid, g);
+            user.name = profile.name;
+            user.picture = profile.picture;
+            user.date = Date.now();
+            // add self to authors list
+            authors[webid] = user;
+            // save list
+            saveLocalAuthors();
+
+            // save to local storage and refresh page
+            saveLocalStorage();
+            window.location.reload();
+        });
     };
 
     // get profile data for a given user
@@ -366,13 +377,15 @@ Plume = (function (window, document) {
             return;
         }
         hideLoading();
-        if (err.status === 404) {
-            var url = err.xhr.requestedURI;
-            document.querySelector('.error-title').innerHTML = "Could not find URL";
-            document.querySelector('.error-url').innerHTML = document.querySelector('.error-url').href = url;
-            document.querySelector('.error').classList.remove('hidden');
-            console.log('Could not fetch URL: '+url, err);
+        var url = err.xhr.requestedURI;
+        var errorText = '';
+        if (err.status > 400 && err.status < 500) {
+            errorText = "Could not fetch URL";
         }
+        document.querySelector('.error-title').innerHTML = errorText + ' - ' + err.status;
+        document.querySelector('.error-url').innerHTML = document.querySelector('.error-url').href = url;
+        document.querySelector('.error').classList.remove('hidden');
+        console.log('URL: '+url, err);
     }
 
     var showViewer = function(url) {
@@ -1113,8 +1126,8 @@ Plume = (function (window, document) {
     // reset to initial view
     var resetAll = function() {
         document.getElementById('menu-button').classList.remove('hidden');
-        if (config.owner == user.webid) {
-            document.querySelector('.new').classList.remove('hidden');
+        if (config.owners.indexOf(user.webid) >= 0) {
+            showNewPostButton();
         }
         hideLoading();
         document.querySelector('.editor').classList.add('hidden');
@@ -1142,7 +1155,6 @@ Plume = (function (window, document) {
     var hideLogin = function() {
         document.getElementsByClassName('login')[0].classList.add('hidden');
         document.getElementsByClassName('logout')[0].classList.remove('hidden');
-        showNewPostButton();
     };
     // loading animation
     var hideLoading = function() {
@@ -1248,6 +1260,10 @@ Plume = (function (window, document) {
                     if (user.authenticated) {
                         hideLogin();
                     }
+                    console.log(config.owners.indexOf(user.webid));
+                    if (config.owners.indexOf(user.webid) >= 0) {
+                        showNewPostButton();
+                    }
                 } else {
                     console.log("Deleting localStorage data because it expired");
                     localStorage.removeItem(appURL);
@@ -1284,6 +1300,7 @@ Plume = (function (window, document) {
         posts: posts,
         login: login,
         logout: logout,
+        signup: signup,
         resetAll: resetAll,
         cancelPost: cancelPost,
         showEditor: showEditor,
