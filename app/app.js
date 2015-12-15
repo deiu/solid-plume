@@ -1260,8 +1260,7 @@ Plume = (function (window, document) {
                     if (user.authenticated) {
                         hideLogin();
                     }
-                    console.log(config.owners.indexOf(user.webid));
-                    if (config.owners.indexOf(user.webid) >= 0) {
+                    if (config.owners && config.owners.indexOf(user.webid) >= 0) {
                         showNewPostButton();
                     }
                 } else {
