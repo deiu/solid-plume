@@ -2,7 +2,7 @@
 
 var Plume = Plume || {};
 
-Plume = (function (window, document) {
+Plume = (function () {
     'use strict';
 
     var config = Plume.config || {};
@@ -211,6 +211,7 @@ Plume = (function (window, document) {
         Solid.auth.login().then(function(webid){
             gotWebID(webid);
         }).catch(function(err) {
+            console.log(err);
             notify('error', "Authentication failed");
             showError(err);
         });
@@ -247,12 +248,19 @@ Plume = (function (window, document) {
             user.date = Date.now();
             // add self to authors list
             authors[webid] = user;
-            // save list
             saveLocalAuthors();
-
-            // save to local storage and refresh page
-            saveLocalStorage();
-            window.location.reload();
+            // add workspaces
+            Solid.identity.getWorkspaces(webid, g).then(function(ws){
+                user.workspaces = ws;
+                // save to local storage and refresh page
+                saveLocalStorage();
+                window.location.reload();
+            }).catch(function(err) {
+                showError(err);
+                // save to local storage and refresh page
+                saveLocalStorage();
+                window.location.reload();
+            });
         });
     };
 
@@ -377,6 +385,7 @@ Plume = (function (window, document) {
             return;
         }
         hideLoading();
+        console.log(err);
         var url = err.xhr.requestedURI;
         var errorText = '';
         if (err.status > 400 && err.status < 500) {
@@ -385,7 +394,6 @@ Plume = (function (window, document) {
         document.querySelector('.error-title').innerHTML = errorText + ' - ' + err.status;
         document.querySelector('.error-url').innerHTML = document.querySelector('.error-url').href = url;
         document.querySelector('.error').classList.remove('hidden');
-        console.log('URL: '+url, err);
     }
 
     var showViewer = function(url) {
@@ -657,6 +665,8 @@ Plume = (function (window, document) {
                     hideLoading();
                     if (user.authenticated) {
                         document.querySelector('.start').classList.remove('hidden');
+                    } else {
+                        document.querySelector('.noauth').classList.remove('hidden');
                     }
                 }
 
@@ -1070,6 +1080,14 @@ Plume = (function (window, document) {
         text.innerHTML = (text.innerHTML=="View")?"Edit":"View";
     };
 
+    // check if user is among the owners list
+    var isOwner = function() {
+        if (config.owners && config.owners.indexOf(user.webid) >= 0) {
+            return true;
+        }
+        return false;
+    };
+
     // formatDate
     var formatDate = function(date, style) {
         style = style || 'LL';
@@ -1133,20 +1151,21 @@ Plume = (function (window, document) {
     // reset to initial view
     var resetAll = function() {
         document.getElementById('menu-button').classList.remove('hidden');
-        if (config.owners.indexOf(user.webid) >= 0) {
+        if (isOwner()) {
             showNewPostButton();
         }
         hideLoading();
+        document.querySelector('.init').classList.add('hidden');
         document.querySelector('.editor').classList.add('hidden');
         document.querySelector('.viewer').classList.add('hidden');
         document.querySelector('.viewer').innerHTML = '';
         document.querySelector('.posts').classList.remove('hidden');
         // document.querySelector('.editor-add-tag').value = '';
         if (posts && len(posts) === 0) {
-            document.querySelector('.start').classList.remove('hidden');
-        } else {
             if (user.authenticated) {
-                document.querySelector('.start').classList.add('hidden');
+                document.querySelector('.start').classList.remove('hidden');
+            } else {
+                document.querySelector('.init').classList.remove('hidden');
             }
         }
 
@@ -1259,15 +1278,16 @@ Plume = (function (window, document) {
         try {
             var data = JSON.parse(localStorage.getItem(appURL));
             if (data) {
-                config = data.config;
                 // don't let session data become stale (24h validity)
                 var dateValid = data.user.date + 1000 * 60 * 60 * 24;
                 if (Date.now() < dateValid) {
+                    config = data.config;
                     user = data.user;
+                    console.log(user);
                     if (user.authenticated) {
                         hideLogin();
                     }
-                    if (config.owners && config.owners.indexOf(user.webid) >= 0) {
+                    if (isOwner()) {
                         showNewPostButton();
                     }
                 } else {
@@ -1318,7 +1338,7 @@ Plume = (function (window, document) {
         deletePost: deletePost,
         togglePreview: togglePreview
     };
-}(this, this.document));
+}(this));
 
 
 Plume.menu = (function() {

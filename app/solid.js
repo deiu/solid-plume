@@ -68,7 +68,7 @@ Solid.auth = (function(window) {
                                     return resolve(user);
                                 }
                             }
-                            return reject({ok: false, status: this.status, body: this.responseText, xhr: this});
+                            return reject({status: this.status, xhr: this});
                         }
                     };
                     http.send();
@@ -140,14 +140,16 @@ Solid.identity = (function(window) {
     'use strict';
 
     // common vocabs
+    var RDF = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
     var OWL = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
     var PIM = $rdf.Namespace("http://www.w3.org/ns/pim/space#");
     var FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/");
+    var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
 
     // fetch user profile (follow sameAs links) and return promise with a graph
     // resolve(graph)
     var getProfile = function(url) {
-        var promise = new Promise(function(resolve) {
+        var promise = new Promise(function(resolve, reject) {
             // Load main profile
             Solid.web.get(url).then(
                 function(graph) {
@@ -159,7 +161,8 @@ Solid.identity = (function(window) {
                     var prefs = graph.statementsMatching(webid, PIM('preferencesFile'), undefined);
                     var toLoad = sameAs.length + seeAlso.length + prefs.length;
 
-                    var checkAll = function() {
+                    // sync promises externally instead of using Promise.all() which fails if one GET fails
+                    var syncAll = function() {
                         if (toLoad === 0) {
                             return resolve(graph);
                         }
@@ -171,13 +174,12 @@ Solid.identity = (function(window) {
                                 function(g) {
                                     Solid.utils.appendGraph(graph, g);
                                     toLoad--;
-                                    checkAll();
+                                    syncAll();
                                 }
                             ).catch(
                             function(err){
-                                console.log(err);
                                 toLoad--;
-                                checkAll();
+                                syncAll();
                             });
                         });
                     }
@@ -188,13 +190,12 @@ Solid.identity = (function(window) {
                                 function(g) {
                                     Solid.utils.appendGraph(graph, g, see.object.value);
                                     toLoad--;
-                                    checkAll();
+                                    syncAll();
                                 }
                             ).catch(
                             function(err){
-                                console.log(err);
                                 toLoad--;
-                                checkAll();
+                                syncAll();
                             });
                         });
                     }
@@ -205,13 +206,12 @@ Solid.identity = (function(window) {
                                 function(g) {
                                     Solid.utils.appendGraph(graph, g, pref.object.value);
                                     toLoad--;
-                                    checkAll();
+                                    syncAll();
                                 }
                             ).catch(
                             function(err){
-                                console.log(err);
                                 toLoad--;
-                                checkAll();
+                                syncAll();
                             });
                         });
                     }
@@ -219,8 +219,7 @@ Solid.identity = (function(window) {
             )
             .catch(
                 function(err) {
-                    console.log("Could not load",url);
-                    resolve(err);
+                    reject(err);
                 }
             );
         });
@@ -229,18 +228,39 @@ Solid.identity = (function(window) {
     };
 
     // Find the user's workspaces
+    // Return an object with the list of objects (workspaces)
     var getWorkspaces = function(webid, graph) {
         var promise = new Promise(function(resolve, reject){
             if (!graph) {
-                // fetch profile
+                // fetch profile and call function again
                 getProfile(webid).then(function(g) {
-                    return getWorkspaces(webid, g);
+                    getWorkspaces(webid, g).then(function(ws) {
+                        return resolve(ws);
+                    }).catch(function(err) {
+                        return reject(err);
+                    });
                 }).catch(function(err){
-                    reject(err);
+                    return reject(err);
                 });
             } else {
                 // find workspaces
-                console.log(graph);
+                var workspaces = [];
+                var ws = graph.statementsMatching($rdf.sym(webid), PIM('workspace'), undefined);
+                if (ws.length === 0) {
+                    return resolve(workspaces);
+                }
+                ws.forEach(function(w){
+                    // try to get some additional info - i.e. desc/title
+                    var workspace = {};
+                    var title = graph.any(w.object, DCT('title'));
+                    if (title && title.value) {
+                        workspace.title = title.value;
+                    }
+                    workspace.url = w.object.uri;
+                    workspace.statements = graph.statementsMatching(w.object, undefined, undefined);
+                    workspaces.push(workspace);
+                });
+                return resolve(workspaces);
             }
         });
 

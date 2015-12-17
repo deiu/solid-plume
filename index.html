@@ -91,7 +91,16 @@
                 <h2><a class="action-button" href="#" onclick="Plume.showEditor()" title="Start writing">Start writing!</a></h2>
             </div>
 
-            <!-- Init blog -->
+            <!-- Init -->
+            <div class="init center-text hidden">
+                <h1>Could not find a blog URL.</h1>
+                <p>If you would like, Plume can attempt to find your blog, or help you create one.</p>
+                <p>Do you use WebID?</p>
+                <a class="action-button" href="#" onclick="Plume.login()" title="I use WebID">Yes, I use WebID</a>
+                <a class="action-button" href="#" onclick="Plume.signup()" title="Sign up for a WebID">No, get me a WebID</a>
+            </div>
+
+            <!-- Errors -->
             <div class="error center-text hidden">
                 <h2 class="error-title">Could not find blog URL</h2>
                 <p><a href="#" class="error-url"></a></p>
