@@ -71,9 +71,9 @@ Plume = (function () {
     };
 
     var user = {};
-
     var posts = {};
     var authors = {};
+    var webSockets = {};
 
     // Initializer
     var init = function(configData) {
@@ -92,6 +92,15 @@ Plume = (function () {
         });
         Solid.status.onOnline(function(){
             notify('info', "And we're back!");
+        });
+        // Init growl-like notifications
+        window.addEventListener('load', function () {
+            Notification.requestPermission(function (status) {
+                // This allows to use Notification.permission with Chrome/Safari
+                if (Notification.permission !== status) {
+                    Notification.permission = status;
+                }
+            });
         });
 
         // Set default config values
@@ -633,10 +642,9 @@ Plume = (function () {
         );
     };
 
-    var fetchPosts = function(url, toElement) {
+    var fetchPosts = function(url, showGrowl) {
         // select element holding all the posts
-        toElement = toElement || config.postsElement;
-        var postsdiv = document.querySelector(toElement);
+        var postsdiv = document.querySelector(config.postsElement);
         // clear previous posts
         postsdiv.innerHTML = '';
         // ask only for sioc:Post resources
@@ -649,7 +657,7 @@ Plume = (function () {
                     st = g.statementsMatching($rdf.sym(url), LDP('contains'), undefined);
                     st.forEach(function(s) {
                         _posts.push(s.object.uri);
-                    });
+                    })
                 } else {
                     st.forEach(function(s) {
                         _posts.push(s.subject.uri);
@@ -670,6 +678,9 @@ Plume = (function () {
                 var isDone = function() {
                     if (toLoad <= 0) {
                         hideLoading();
+                        if (showGrowl) {
+                            growl("Updating...", "Finished updating your blog");
+                        }
                     }
                 }
 
@@ -722,6 +733,17 @@ Plume = (function () {
                         }
                     );
                 });
+
+                // setup WebSocket listener since we are sure we have posts in this container
+                Solid.web.head(url).then(function(meta) {
+                    if (meta.websocket.length > 0) {
+                        socketSubscribe(meta.websocket, url);
+                    }
+                }).catch(
+                    function(err) {
+                        showError(err);
+                    }
+                );
             }
         )
         .catch(
@@ -1027,6 +1049,39 @@ Plume = (function () {
         }
     };
 
+    // Websocket
+    var connectToSocket = function(wss, uri) {
+        if (!webSockets[wss]) {
+            var socket = new WebSocket(wss);
+            socket.onopen = function(){
+                this.send('sub ' + uri);
+                console.log("Connected to WebSocket at", wss);
+            }
+            socket.onmessage = function(msg){
+                if (msg.data && msg.data.slice(0, 3) === 'pub') {
+                    // resource updated
+                    var res = trim(msg.data.slice(3, msg.data.length));
+                    console.log("Got new message: pub", res);
+                    fetchPosts(res, true); //refetch posts and notify
+                }
+            }
+            socket.onclose = function() {
+                console.log("Websocket connection closed. Restarting...");
+                connectToSocket(wss, uri);
+            }
+            webSockets[wss] = socket;
+        }
+    };
+
+    // Subscribe to changes to a URL
+    var socketSubscribe = function(wss, url) {
+        if (webSockets[wss]) {
+            webSockets[wss].send('sub '+url);
+        } else {
+            connectToSocket(wss, url);
+        }
+    };
+
     // Misc/helper functions
     var sortTag = function(name) {
         console.log(name);
@@ -1064,6 +1119,61 @@ Plume = (function () {
             setTimeout(function() {
                 note.remove();
             }, timeout);
+        }
+    };
+
+    // Send a browser notification
+    var growl = function(type, body, timeout) {
+        var icon = 'favicon.png';
+        if (!timeout) {
+            var timeout = 2000;
+        }
+
+        // Let's check if the browser supports notifications
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notification");
+        }
+
+        // At last, if the user already denied any notification, and you
+        // want to be respectful there is no need to bother him any more.
+        // Let's check if the user is okay to get some notification
+        if (Notification.permission === "granted") {
+            // If it's okay let's create a notification
+            var notification = new Notification(type, {
+                dir: "auto",
+                lang: "",
+                icon: icon,
+                body: body,
+                tag: "notif"
+            });
+            setTimeout(function() { notification.close(); }, timeout);
+        }
+    };
+    // Authorize browser notifications
+    function authorizeNotifications() {
+        var status = getNotifStatus();
+        // Let's check if the browser supports notifications
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notification");
+        }
+
+        if (status !== 'granted') {
+            Notification.requestPermission(function (permission) {
+                // Whatever the user answers, we make sure we store the information
+                Notification.permission = permission;
+            });
+        } else if (status === 'granted') {
+            Notification.permission = 'denied';
+        }
+    };
+    // Browser notifications status
+    function getNotifStatus() {
+        // Let's check if the browser supports notifications
+        if (!("Notification" in window)) {
+            console.log("This browser does not support desktop notification");
+            return undefined
+        } else {
+            return Notification.permission;
         }
     };
 
@@ -1349,7 +1459,8 @@ Plume = (function () {
         cancelDelete: cancelDelete,
         deletePost: deletePost,
         togglePreview: togglePreview,
-        toggleOverlay: toggleOverlay
+        toggleOverlay: toggleOverlay,
+        growl: growl
     };
 }(this));
 

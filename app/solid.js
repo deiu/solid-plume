@@ -357,10 +357,11 @@ Solid.web = (function(window) {
     var parseResponseMeta = function(resp) {
         var h = Solid.utils.parseLinkHeader(resp.getResponseHeader('Link'));
         var meta = {};
-        meta.url = resp.getResponseHeader('Location');
+        meta.url = (resp.getResponseHeader('Location'))?resp.getResponseHeader('Location'):resp.responseURL;
         meta.acl = h['acl'];
         meta.meta = (h['meta'])?h['meta']:h['describedBy'];
         meta.user = (resp.getResponseHeader('User'))?resp.getResponseHeader('User'):'';
+        meta.websocket = (resp.getResponseHeader('Updates-Via'))?resp.getResponseHeader('Updates-Via'):'';
         meta.exists = false;
         meta.exists = (resp.status === 200)?true:false;
         meta.xhr = resp;
