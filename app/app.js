@@ -666,7 +666,7 @@ Plume = (function () {
                     if (user.authenticated) {
                         document.querySelector('.start').classList.remove('hidden');
                     } else {
-                        document.querySelector('.noauth').classList.remove('hidden');
+                        document.querySelector('.init').classList.remove('hidden');
                     }
                 }
 
@@ -1061,6 +1061,13 @@ Plume = (function () {
         }
     };
 
+    // Overlay
+    var toggleOverlay = function() {
+        var overlay = document.querySelector(".overlay");
+        overlay.addEventListener('click', toggleOverlay);
+        overlay.style.visibility = (overlay.style.visibility == "visible") ? "hidden" : "visible";
+    };
+
     // Convert rgb() to #hex
     var rgbToHex = function (color) {
         color = color.replace(/\s/g,"");
@@ -1283,7 +1290,6 @@ Plume = (function () {
                 if (Date.now() < dateValid) {
                     config = data.config;
                     user = data.user;
-                    console.log(user);
                     if (user.authenticated) {
                         hideLogin();
                     }
@@ -1336,7 +1342,8 @@ Plume = (function () {
         confirmDelete: confirmDelete,
         cancelDelete: cancelDelete,
         deletePost: deletePost,
-        togglePreview: togglePreview
+        togglePreview: togglePreview,
+        toggleOverlay: toggleOverlay
     };
 }(this));
 

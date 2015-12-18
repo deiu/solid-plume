@@ -95,9 +95,9 @@
             <div class="init center-text hidden">
                 <h1>Could not find a blog URL.</h1>
                 <p>If you would like, Plume can attempt to find your blog, or help you create one.</p>
-                <p>Do you use WebID?</p>
+                <p>Do you use WebID? <a href="#" onclick="Plume.toggleOverlay()">[<span class="fa fa-question"></span>]</a></p>
                 <a class="action-button" href="#" onclick="Plume.login()" title="I use WebID">Yes, I use WebID</a>
-                <a class="action-button" href="#" onclick="Plume.signup()" title="Sign up for a WebID">No, get me a WebID</a>
+                <a class="action-button" href="#" onclick="Plume.signup()" title="Sign up for a WebID">No, I need a WebID</a>
             </div>
 
             <!-- Errors -->
@@ -114,6 +114,33 @@
                     </ul>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="overlay">
+        <div class="overlay-text">
+            <h2>What is a WebID?</h2>
+            <p>
+                A WebID is a URL for you. It allows you to set up a reusable identity
+                and a profile, with friends, pictures and all kinds of things.
+            </p>
+            <p>
+                Unlike social networks, with WebID you reuse your identity and personal
+                data in a decentralized, privacy-friendly way, across multiple applications
+                and services on the Web. It works like having an account on a social
+                networking site, but it isn't restricted to just that site. It is very
+                open because the information can connect to other people, apps, projects
+                and so on, without everyone having to join the same social networking site.
+                (<a href="http://www.w3.org/wiki/WebID" target="_blank">more information</a>)
+            </p>
+            <p>
+                When you create a WebID account, you may also get storage space on the
+                selected server. The amount of available space can vary from server to
+                server. Additionally, a common list of workspaces (i.e. dedicated folders)
+                maye be created by default, such as <i>Public</i>, <i>Private</i>,
+                <i>Family</i>, <i>Work</i>, etc.
+            </p>
+            <div class="float-right"><a href="#" class="action-button">Close</a></div>
         </div>
     </div>
 
