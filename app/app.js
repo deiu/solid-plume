@@ -15,15 +15,12 @@ Plume = (function () {
     $rdf.Fetcher.crossSiteProxyTemplate = PROXY;
     // common vocabs
     var RDF = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-    var RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
     var FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/");
-    var OWL = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
-    var PIM = $rdf.Namespace("http://www.w3.org/ns/pim/space#");
-    var UI = $rdf.Namespace("http://www.w3.org/ns/ui#");
     var DCT = $rdf.Namespace("http://purl.org/dc/terms/");
     var LDP = $rdf.Namespace("http://www.w3.org/ns/ldp#");
-    var MBLOG = $rdf.Namespace("http://www.w3.org/ns/mblog#");
     var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
+    var SIOC = $rdf.Namespace("http://rdfs.org/sioc/ns#");
+    var SOLID = $rdf.Namespace("http://www.w3.org/ns/solid/terms#");
 
     // init markdown editor
     var editor = new SimpleMDE({
@@ -381,11 +378,10 @@ Plume = (function () {
     };
 
     var showError = function(err) {
-        if (!err) {
+        if (!err || !err.xhr) {
             return;
         }
         hideLoading();
-        console.log(err);
         var url = err.xhr.requestedURI;
         var errorText = '';
         if (err.status > 400 && err.status < 500) {
@@ -394,7 +390,7 @@ Plume = (function () {
         document.querySelector('.error-title').innerHTML = errorText + ' - ' + err.status;
         document.querySelector('.error-url').innerHTML = document.querySelector('.error-url').href = url;
         document.querySelector('.error').classList.remove('hidden');
-    }
+    };
 
     var showViewer = function(url) {
         window.history.pushState("", document.querySelector('title').value, window.location.pathname+"?post="+encodeURIComponent(url));
@@ -681,36 +677,41 @@ Plume = (function () {
                 _posts.forEach(function(url){
                     fetchPost(url).then(
                         function(post) {
-                            // convert post to HTML
-                            var article = postToHTML(post, true);
+                            if (len(post) === 0) {
+                                toLoad--;
+                                isDone();
+                            } else {
+                                // convert post to HTML
+                                var article = postToHTML(post, true);
 
-                            // sort array and add to dom
-                            // TODO improve it later
-                            sortedPosts.push({date: post.created, url: post.url});
-                            sortedPosts.sort(function(a,b) {
-                                var c = new Date(a.date);
-                                var d = new Date(b.date);
-                                return d-c;
-                            });
-                            for(var i=0; i<sortedPosts.length; i++) {
-                                var p = sortedPosts[i];
-                                if (p.url == post.url) {
-                                    if (i === sortedPosts.length-1) {
-                                        postsdiv.appendChild(article);
-                                    } else {
-                                        postsdiv.insertBefore(article, document.getElementById(sortedPosts[i+1].url));
+                                // sort array and add to dom
+                                // TODO improve it later
+                                sortedPosts.push({date: post.created, url: post.url});
+                                sortedPosts.sort(function(a,b) {
+                                    var c = new Date(a.date);
+                                    var d = new Date(b.date);
+                                    return d-c;
+                                });
+                                for(var i=0; i<sortedPosts.length; i++) {
+                                    var p = sortedPosts[i];
+                                    if (p.url == post.url) {
+                                        if (i === sortedPosts.length-1) {
+                                            postsdiv.appendChild(article);
+                                        } else {
+                                            postsdiv.insertBefore(article, document.getElementById(sortedPosts[i+1].url));
+                                        }
+                                        break;
                                     }
-                                    break;
                                 }
-                            }
 
-                            // fade long text in article
-                            if (config.fadeText) {
-                                addTextFade(post.url);
-                            }
+                                // fade long text in article
+                                if (config.fadeText) {
+                                    addTextFade(post.url);
+                                }
 
-                            toLoad--;
-                            isDone();
+                                toLoad--;
+                                isDone();
+                            }
                         }
                     )
                     .catch(
@@ -734,10 +735,13 @@ Plume = (function () {
         var promise = new Promise(function(resolve, reject){
             Solid.web.get(url).then(
                 function(g) {
-                    var p = g.statementsMatching(undefined, RDF('type'), SIOC('Post'))[0];
+                    var subject = g.any(undefined, RDF('type'), SIOC('Post'));
 
-                    if (p) {
-                        var subject = p.subject;
+                    if (!subject) {
+                        subject = g.any(undefined, RDF('type'), SOLID('Notification'));
+                    }
+
+                    if (subject) {
                         var post = { url: subject.uri };
 
                         // add title
@@ -803,6 +807,8 @@ Plume = (function () {
                         // add post to local list
                         posts[post.url] = post;
                         resolve(post);
+                    } else {
+                        resolve({});
                     }
                 }
             )
@@ -1021,11 +1027,11 @@ Plume = (function () {
         }
     };
 
+    // Misc/helper functions
     var sortTag = function(name) {
         console.log(name);
     };
 
-    // Misc/helper functions
     var notify = function(ntype, text, timeout) {
         timeout = timeout || 1500;
         var note = document.createElement('div');
@@ -1062,8 +1068,8 @@ Plume = (function () {
     };
 
     // Overlay
-    var toggleOverlay = function() {
-        var overlay = document.querySelector(".overlay");
+    var toggleOverlay = function(elem) {
+        var overlay = document.querySelector(elem);
         overlay.addEventListener('click', toggleOverlay);
         overlay.style.visibility = (overlay.style.visibility == "visible") ? "hidden" : "visible";
     };

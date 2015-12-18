@@ -95,7 +95,7 @@
             <div class="init center-text hidden">
                 <h1>Could not find a blog URL.</h1>
                 <p>If you would like, Plume can attempt to find your blog, or help you create one.</p>
-                <p>Do you use WebID? <a href="#" onclick="Plume.toggleOverlay()">[<span class="fa fa-question"></span>]</a></p>
+                <p>Do you use WebID? <a href="#" onclick="Plume.toggleOverlay('#webid-info')">[<span class="fa fa-question"></span>]</a></p>
                 <a class="action-button" href="#" onclick="Plume.login()" title="I use WebID">Yes, I use WebID</a>
                 <a class="action-button" href="#" onclick="Plume.signup()" title="Sign up for a WebID">No, I need a WebID</a>
             </div>
@@ -104,9 +104,13 @@
             <div class="error center-text hidden">
                 <h2 class="error-title">Could not find blog URL</h2>
                 <p><a href="#" class="error-url"></a></p>
-                <p><a class="action-button" href="." title="Back to blog">≪ Back to blog</a></p>
+                <p>
+                    <a class="action-button" href="." title="Back to blog">≪ Back to blog</a>
+                    <a class="action-button error-access hidden" href="#" onclick="#" title="Request access">Request access</a>
+                </p>
             </div>
 
+            <!-- Footer -->
             <div class="footer">
                 <div class="pure-menu pure-menu-horizontal">
                     <ul>
@@ -117,7 +121,7 @@
         </div>
     </div>
 
-    <div class="overlay">
+    <div id="webid-info" class="overlay">
         <div class="overlay-text">
             <h2>What is a WebID?</h2>
             <p>
