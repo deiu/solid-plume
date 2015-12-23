@@ -1038,7 +1038,7 @@ Plume = (function () {
             var section = article.querySelector('section');
             var height = section.offsetHeight;
             // fade post contents if post is too long
-            if (height > 300) {
+            if (height > 400) {
                 section.classList.add('less');
                 var fade = document.createElement('div');
                 fade.classList.add('fade-bottom');
