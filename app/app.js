@@ -978,7 +978,7 @@ Plume = (function () {
         }
 
         // create title
-        var title = document.createElement('h2');
+        var title = document.createElement('h1');
         title.classList.add('post-title');
         title.innerHTML = (post.title)?'<a class="clickable" href="?post='+encodeURIComponent(post.url)+'">'+post.title+'</a>':'';
         // append title to body

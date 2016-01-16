@@ -370,7 +370,7 @@ a.editor-author, a.editor-author:visited {
     mask: url(../img/logo.svg) no-repeat 50% 50%;
 }
 .post-title {
-    font-size: 1.7em;
+    font-size: 1.7em!important;
     font-weight: bold;
     color: #333;
     margin-top: 1.5em;
@@ -596,6 +596,12 @@ pre {
 }
 .content h1 {
     line-height: 1em;
+    font-size: 1.3em;
+}
+
+.content h2 {
+    line-height: 1em;
+    font-size: 1.1em;
 }
 
 .header {
