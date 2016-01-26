@@ -1222,10 +1222,11 @@ Plume = (function () {
     };
 
     // sanitize strings
-    var trim = function(str) {
+    var trim = function (str) {
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
-    var makeSlug = function(str) {
+    var makeSlug = function (str) {
+        slug += '.ttl'
         // replace white spaces and multiple dashes
         return str.replace(/\s+/g, '-').
                     replace(/-+/g, '-').
