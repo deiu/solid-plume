@@ -1226,14 +1226,15 @@ Plume = (function () {
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
     var makeSlug = function (str) {
-        str += '.ttl'
         // replace white spaces and multiple dashes
-        return str.replace(/\s+/g, '-').
+        str = str.replace(/\s+/g, '-').
                     replace(/-+/g, '-').
                     replace(/^-+/, '').
                     replace(/-*$/, '').
                     replace(/[^A-Za-z0-9-]/g, '').
                     toLowerCase();
+        str += '.ttl';
+	return str;
     };
 
     // escape HTML code
