@@ -1226,7 +1226,7 @@ Plume = (function () {
         return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
     var makeSlug = function (str) {
-        slug += '.ttl'
+        str += '.ttl'
         // replace white spaces and multiple dashes
         return str.replace(/\s+/g, '-').
                     replace(/-+/g, '-').
