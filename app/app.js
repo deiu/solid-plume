@@ -373,7 +373,7 @@ Plume = (function () {
                         document.getElementById(url).remove();
                         document.getElementById('delete').remove();
                         notify('success', 'Successfully deleted post');
-                        resetAll();
+                        resetAll(true);
                     }
                 }
             )
@@ -629,6 +629,9 @@ Plume = (function () {
         writer.then(
             function(res) {
                 // all done, clean up and go to initial state
+                if (res.url.slice(0,4) !== 'http') {
+                    res.url = config.postsURL.slice(0, config.postsURL.lastIndexOf('/') + 1)+slug;
+                }
                 cancelPost('?post='+encodeURIComponent(res.url));
             }
         )
@@ -1274,7 +1277,7 @@ Plume = (function () {
     };
 
     // reset to initial view
-    var resetAll = function() {
+    var resetAll = function(refresh) {
         document.getElementById('menu-button').classList.remove('hidden');
         if (isOwner()) {
             showNewPostButton();
@@ -1293,8 +1296,11 @@ Plume = (function () {
                 document.querySelector('.init').classList.remove('hidden');
             }
         }
-
-        window.history.pushState("", document.querySelector('title').value, window.location.pathname);
+        if (refresh) {
+            showBlog(config.postsURL);
+        } else {
+            window.history.pushState("", document.querySelector('title').value, window.location.pathname);
+        }
     };
 
     // login / logout buttons + new post
