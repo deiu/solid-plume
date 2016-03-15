@@ -10,7 +10,7 @@ It currently does not support dynamic configuration of data spaces, which means 
 
 ## Configuration
 
-Before being able to use Plume, you will have to manually set some config values. First you need to copy/rename the `config-example.json` file to `config.json`. Then you need to set the `postsURL` value to have it point to an **existing** container on a [Solid-friendly server](https://github.com/solid/solid-platform) that holds your blog posts. Finally, you should also set the `owner` to your own WebID, to be able to access the editor UI and to create new posts.
+Before being able to use Plume, you will have to manually set some config values. First you need to copy/rename the `config-example.json` file to `config.json`. Then you need to set the `postsURL` value to have it point to an **existing** container on a [Solid-friendly server](https://github.com/solid/solid-platform) that holds your blog posts. Finally, you should also set the `owners` variable by adding your own WebID, in order to be able to access the editor UI and to create new posts.
 
 Here is an example of the configuration file:
 
