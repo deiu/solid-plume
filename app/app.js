@@ -84,7 +84,14 @@ Plume = (function () {
             if (config.defaultPath.lastIndexOf('/') < 0) {
                 config.defaultPath += '/';
             }
+            saveLocalStorage();
+        } else {
+            // try to load config from localStorage
+            loadLocalStorage();
         }
+
+        // try to load authors
+        loadLocalAuthors();
 
         // Add online/offline events
         Solid.status.onOffline(function(){
@@ -110,10 +117,6 @@ Plume = (function () {
         document.querySelector('.blog-tagline').innerHTML = config.tagline;
         // set default parent element for posts
         config.postsElement = '.posts';
-
-        // try to load config from localStorage
-        loadLocalStorage();
-        loadLocalAuthors();
 
         if (user.authenticated) {
             hideLogin();
