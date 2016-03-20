@@ -77,18 +77,8 @@ Plume = (function () {
 
     // Initializer
     var init = function(configData) {
-        // loaded config from file
-        if (configData) {
-            config = configData;
-            // append trailing slash to data path if missing
-            if (config.defaultPath.lastIndexOf('/') < 0) {
-                config.defaultPath += '/';
-            }
-            saveLocalStorage();
-        } else {
-            // try to load config from localStorage
-            loadLocalStorage();
-        }
+        // set config params
+        applyConfig(configData);
 
         // try to load authors
         loadLocalAuthors();
@@ -109,28 +99,6 @@ Plume = (function () {
                 }
             });
         });
-
-        // Set default config values
-        document.querySelector('.blog-picture').src = config.picture;
-        document.querySelector('.blog-title').innerHTML = config.title;
-        document.querySelector('title').innerHTML = config.title;
-        document.querySelector('.blog-tagline').innerHTML = config.tagline;
-        // set default parent element for posts
-        config.postsElement = '.posts';
-
-        if (user.authenticated) {
-            hideLogin();
-        }
-
-        // append trailing slash to data path if missing
-        if (config.defaultPath.lastIndexOf('/') < 0) {
-            config.defaultPath += '/';
-        }
-        if (!config.postsURL || config.postsURL.length === 0) {
-            config.postsURL = appURL + config.defaultPath;
-        }
-
-        config.loadInBg = true;
 
         // basic app routes
         if (queryVals['post'] && queryVals['post'].length > 0) {
@@ -163,6 +131,46 @@ Plume = (function () {
                 showInitDialog();
             }
         }
+    };
+
+    // Set default config values
+    var applyConfig = function(configData) {
+        // loaded config from file
+        config.defaultPath = 'posts';
+        if (configData) {
+            config = configData;
+            // append trailing slash to data path if missing
+            if (config.defaultPath.lastIndexOf('/') < 0) {
+                config.defaultPath += '/';
+            }
+            config.saveDate = Date.now();
+            saveLocalStorage();
+        } else {
+            // try to load config from localStorage
+            console.log("Loading config from localStorage");
+            loadLocalStorage();
+        }
+
+        document.querySelector('.blog-picture').src = config.picture;
+        document.querySelector('.blog-title').innerHTML = config.title;
+        document.querySelector('title').innerHTML = config.title;
+        document.querySelector('.blog-tagline').innerHTML = config.tagline;
+        // set default parent element for posts
+        config.postsElement = '.posts';
+
+        if (user.authenticated) {
+            hideLogin();
+        }
+
+        // append trailing slash to data path if missing
+        if (config.defaultPath.lastIndexOf('/') < 0) {
+            config.defaultPath += '/';
+        }
+        if (!config.postsURL || config.postsURL.length === 0) {
+            config.postsURL = appURL + config.defaultPath;
+        }
+
+        config.loadInBg = true;
     };
 
     // show a particular blog
@@ -1413,7 +1421,7 @@ Plume = (function () {
             var data = JSON.parse(localStorage.getItem(appURL));
             if (data) {
                 // don't let session data become stale (24h validity)
-                var dateValid = data.user.date + 1000 * 60 * 60 * 24;
+                var dateValid = data.config.saveDate + 1000 * 60 * 60 * 24;
                 if (Date.now() < dateValid) {
                     config = data.config;
                     user = data.user;
@@ -1432,7 +1440,7 @@ Plume = (function () {
                 localStorage.removeItem(appURL);
             }
         } catch(err) {
-            notify('sticky', 'You have disabled cookies. Persistence functionality is disabled.');
+            notify('sticky', 'Persistence functionality is disabled while cookies are disabled.');
             console.log(err);
         }
     };
@@ -1441,6 +1449,7 @@ Plume = (function () {
 
     // ----- INIT -----
     // start app by loading the config file
+    applyConfig();
     var http = new XMLHttpRequest();
     http.open('get', 'config.json');
     http.onreadystatechange = function() {
