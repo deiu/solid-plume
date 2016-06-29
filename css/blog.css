@@ -483,6 +483,7 @@ a.editor-author, a.editor-author:visited {
 
 pre {
     background: #F9F9F9;
+    font-size: 1rem;
 }
 
 .footer {
