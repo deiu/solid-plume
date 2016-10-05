@@ -697,7 +697,7 @@ nav#global-nav img {
     left: 0.5em;
     top: 0.5em;
     padding: 0;
-    position: fixed;
+    position: relative;
     text-align: center;
     z-index: 8;
     -moz-transition: all 300ms;
@@ -788,4 +788,3 @@ nav#global-nav img {
         text-align: center;
     }
 }
-
